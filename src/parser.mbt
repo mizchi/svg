@@ -292,7 +292,7 @@ fn parse_element(
         let temp = SVGNode::new(Group)
         parse_children(parser, temp, tag_name, ctx)
       }
-      Some(SVGNode::new(Group))
+      Group |> SVGNode::new |> Some
     }
     "symbol" => {
       let symbol_node = SVGNode::new(Group)
@@ -306,11 +306,11 @@ fn parse_element(
         None => None
       }
       let width = match get_attr(attrs, "width") {
-        Some(v) => Some(parse_length(v))
+        Some(v) => v |> parse_length |> Some
         None => None
       }
       let height = match get_attr(attrs, "height") {
-        Some(v) => Some(parse_length(v))
+        Some(v) => v |> parse_length |> Some
         None => None
       }
       let display_none = match get_attr(attrs, "display") {
@@ -335,7 +335,7 @@ fn parse_element(
       }
       let symbol = { ..symbol, width, height, display_none }
       ctx.symbols.add(symbol)
-      Some(SVGNode::new(Group))
+      Group |> SVGNode::new |> Some
     }
     "clipPath" => {
       if not(self_closing) {
@@ -343,7 +343,7 @@ fn parse_element(
       } else {
         parse_clip_path_from_attrs(attrs, ctx)
       }
-      Some(SVGNode::new(Group))
+      Group |> SVGNode::new |> Some
     }
     "mask" => {
       if not(self_closing) {
@@ -351,7 +351,7 @@ fn parse_element(
       } else {
         parse_mask_from_attrs(attrs, ctx)
       }
-      Some(SVGNode::new(Group))
+      Group |> SVGNode::new |> Some
     }
     "marker" => {
       if not(self_closing) {
@@ -359,7 +359,7 @@ fn parse_element(
       } else {
         parse_marker_from_attrs(attrs, ctx, parent_tag)
       }
-      Some(SVGNode::new(Group))
+      Group |> SVGNode::new |> Some
     }
     "image" => {
       let node = parse_image(attrs)
@@ -374,7 +374,7 @@ fn parse_element(
       } else {
         parse_pattern_from_attrs(attrs, ctx, parent_tag)
       }
-      Some(SVGNode::new(Group))
+      Group |> SVGNode::new |> Some
     }
     "linearGradient" => {
       if not(self_closing) {
@@ -382,7 +382,7 @@ fn parse_element(
       } else {
         parse_linear_gradient_from_attrs(attrs, ctx, parent_tag)
       }
-      Some(SVGNode::new(Group))
+      Group |> SVGNode::new |> Some
     }
     "radialGradient" => {
       if not(self_closing) {
@@ -390,7 +390,7 @@ fn parse_element(
       } else {
         parse_radial_gradient_from_attrs(attrs, ctx, parent_tag)
       }
-      Some(SVGNode::new(Group))
+      Group |> SVGNode::new |> Some
     }
     "use" => {
       let node = parse_use(attrs, ctx)
@@ -399,7 +399,7 @@ fn parse_element(
       }
       match node {
         Some(_) => node
-        None => Some(SVGNode::new(Group))
+        None => Group |> SVGNode::new |> Some
       }
     }
     _ => {
@@ -409,14 +409,8 @@ fn parse_element(
       apply_attributes(node, attrs)
       if tag_name == "svg" {
         if parent_tag != "" {
-          match get_attr(attrs, "width") {
-            Some(v) => node.viewport_width = Some(parse_length(v))
-            None => ()
-          }
-          match get_attr(attrs, "height") {
-            Some(v) => node.viewport_height = Some(parse_length(v))
-            None => ()
-          }
+          if get_attr(attrs, "width") is Some(v) { node.viewport_width = v |> parse_length |> Some }
+          if get_attr(attrs, "height") is Some(v) { node.viewport_height = v |> parse_length |> Some }
         }
         match get_attr(attrs, "overflow") {
           Some(v) =>
@@ -609,15 +603,9 @@ fn apply_attribute(node : SVGNode, name : String, value : String) -> Unit {
       node.preserve_aspect_ratio_is_set = true
     }
     "clip-path" =>
-      match parse_url_ref(value) {
-        Some(id) => node.set_clip_path(id)
-        None => ()
-      }
+      if parse_url_ref(value) is Some(id) { node.set_clip_path(id) }
     "mask" =>
-      match parse_url_ref(value) {
-        Some(id) => node.set_mask(id)
-        None => ()
-      }
+      if parse_url_ref(value) is Some(id) { node.set_mask(id) }
     "requiredExtensions" => node.opacity = 0.0
     "x" =>
       match node.shape {
@@ -973,17 +961,14 @@ fn apply_presentation_attributes(
 
 ///|
 fn extract_paint_order(attrs : Array[(String, String)]) -> PaintOrder? {
-  match get_attr(attrs, "paint-order") {
-    Some(v) => return Some(parse_paint_order(v))
-    None => ()
-  }
+  if get_attr(attrs, "paint-order") is Some(v) { return v |> parse_paint_order |> Some }
   match get_attr(attrs, "style") {
     Some(style) => {
       let pairs = parse_style_pairs(style)
       for pair in pairs {
         let name = pair.0.to_lower()
         if name == "paint-order" {
-          return Some(parse_paint_order(pair.1))
+          return pair.1 |> parse_paint_order |> Some
         }
       }
     }
@@ -1004,7 +989,7 @@ fn apply_paint_order_recursive(node : SVGNode, order : PaintOrder) -> Unit {
 fn parse_style_pairs(value : String) -> Array[(String, String)] {
   let pairs : Array[(String, String)] = []
   let mut buf = StringBuilder::new()
-  for i = 0; i < value.length(); i = i + 1 {
+  for i in 0..<value.length() {
     let c = Int::unsafe_to_char(value[i].to_int())
     if c == ';' {
       let entry = trim_string(buf.to_string())
@@ -1026,7 +1011,7 @@ fn parse_style_pairs(value : String) -> Array[(String, String)] {
 ///|
 fn parse_style_entry(entry : String, pairs : Array[(String, String)]) -> Unit {
   let mut colon_index = -1
-  for i = 0; i < entry.length(); i = i + 1 {
+  for i in 0..<entry.length() {
     let c = Int::unsafe_to_char(entry[i].to_int())
     if c == ':' {
       colon_index = i
@@ -1079,7 +1064,7 @@ fn parse_url_ref(value : String) -> String? {
 fn parse_number_list(value : String) -> Array[Double] {
   let nums : Array[Double] = []
   let mut buf = StringBuilder::new()
-  for i = 0; i < value.length(); i = i + 1 {
+  for i in 0..<value.length() {
     let c = Int::unsafe_to_char(value[i].to_int())
     if c == ' ' || c == ',' || c == '\n' || c == '\r' || c == '\t' {
       if buf.to_string().length() > 0 {
@@ -1100,7 +1085,7 @@ fn parse_number_list(value : String) -> Array[Double] {
 fn split_tokens(value : String) -> Array[String] {
   let tokens : Array[String] = []
   let mut buf = StringBuilder::new()
-  for i = 0; i < value.length(); i = i + 1 {
+  for i in 0..<value.length() {
     let c = Int::unsafe_to_char(value[i].to_int())
     if c == ' ' || c == '\n' || c == '\r' || c == '\t' {
       if buf.to_string().length() > 0 {
@@ -1214,11 +1199,11 @@ fn parse_use(
     None => 0.0
   }
   let width = match get_attr(attrs, "width") {
-    Some(v) => Some(parse_length(v))
+    Some(v) => v |> parse_length |> Some
     None => None
   }
   let height = match get_attr(attrs, "height") {
-    Some(v) => Some(parse_length(v))
+    Some(v) => v |> parse_length |> Some
     None => None
   }
   let (width, height) = match get_attr(attrs, "style") {
@@ -1229,9 +1214,9 @@ fn parse_use(
       for pair in pairs {
         let name = pair.0.to_lower()
         if name == "width" {
-          w = Some(parse_length(pair.1))
+          w = pair.1 |> parse_length |> Some
         } else if name == "height" {
-          h = Some(parse_length(pair.1))
+          h = pair.1 |> parse_length |> Some
         }
       }
       (w, h)
@@ -1329,10 +1314,7 @@ fn parse_use(
             None => node.id = ""
           }
           apply_presentation_attributes(node, attrs)
-          match extract_paint_order(attrs) {
-            Some(order) => apply_paint_order_recursive(node, order)
-            None => ()
-          }
+          if extract_paint_order(attrs) is Some(order) { apply_paint_order_recursive(node, order) }
           Some(node)
         }
         None => None
@@ -1370,10 +1352,7 @@ fn parse_use(
             None => node.id = ""
           }
           apply_presentation_attributes(node, attrs)
-          match extract_paint_order(attrs) {
-            Some(order) => apply_paint_order_recursive(node, order)
-            None => ()
-          }
+          if extract_paint_order(attrs) is Some(order) { apply_paint_order_recursive(node, order) }
           Some(node)
         }
         None => {
@@ -1452,10 +1431,7 @@ fn parse_use(
                 None => node.id = ""
               }
               apply_presentation_attributes(node, attrs)
-              match extract_paint_order(attrs) {
-                Some(order) => apply_paint_order_recursive(node, order)
-                None => ()
-              }
+              if extract_paint_order(attrs) is Some(order) { apply_paint_order_recursive(node, order) }
               Some(node)
             }
             None => None
@@ -1701,7 +1677,7 @@ fn decode_data_svg(href : String) -> String? {
     return decode_base64_local(cleaned)
   }
   let decoded = decode_html_entities(data)
-  Some(decode_percent_local(decoded))
+  decoded |> decode_percent_local |> Some
 }
 
 ///|
@@ -1712,7 +1688,7 @@ fn split_href_fragment(href : String) -> (String, String?) {
   } else {
     let base = build_substring(href, 0, idx)
     let frag = build_substring(href, idx + 1, href.length())
-    (base, Some(decode_percent_local(frag)))
+    (base, frag |> decode_percent_local |> Some)
   }
 }
 
@@ -1722,10 +1698,7 @@ fn find_node_by_id(node : SVGNode, id : String) -> SVGNode? {
     return Some(node)
   }
   for child in node.children {
-    match find_node_by_id(child, id) {
-      Some(found) => return Some(found)
-      None => ()
-    }
+    if find_node_by_id(child, id) is Some(found) { return Some(found) }
   }
   None
 }
@@ -1920,41 +1893,29 @@ fn parse_mask_with_content(
   let mut y_is_percent = false
   let mut width_is_percent = false
   let mut height_is_percent = false
-  match get_attr(attrs, "x") {
-    Some(v) => {
+  if get_attr(attrs, "x") is Some(v) {
       let (val, is_percent) = parse_mask_length(v, mask_units)
       x = val
       x_is_percent = is_percent
       has_bounds = true
-    }
-    None => ()
   }
-  match get_attr(attrs, "y") {
-    Some(v) => {
+  if get_attr(attrs, "y") is Some(v) {
       let (val, is_percent) = parse_mask_length(v, mask_units)
       y = val
       y_is_percent = is_percent
       has_bounds = true
-    }
-    None => ()
   }
-  match get_attr(attrs, "width") {
-    Some(v) => {
+  if get_attr(attrs, "width") is Some(v) {
       let (val, is_percent) = parse_mask_length(v, mask_units)
       width = val
       width_is_percent = is_percent
       has_bounds = true
-    }
-    None => ()
   }
-  match get_attr(attrs, "height") {
-    Some(v) => {
+  if get_attr(attrs, "height") is Some(v) {
       let (val, is_percent) = parse_mask_length(v, mask_units)
       height = val
       height_is_percent = is_percent
       has_bounds = true
-    }
-    None => ()
   }
   let base = if has_bounds {
     Mask::with_bounds(id, content, x, y, width, height)
@@ -2061,42 +2022,15 @@ fn parse_marker_with_content(
   let mut view_box : ViewBox? = None
   let mut preserve_aspect_ratio = PreserveAspectRatio::default()
   let mut overflow_visible = false
-  match get_attr(attrs, "refX") {
-    Some(v) => ref_x = parse_length(v)
-    None => ()
-  }
-  match get_attr(attrs, "refY") {
-    Some(v) => ref_y = parse_length(v)
-    None => ()
-  }
-  match get_attr(attrs, "markerWidth") {
-    Some(v) => marker_width = parse_length(v)
-    None => ()
-  }
-  match get_attr(attrs, "markerHeight") {
-    Some(v) => marker_height = parse_length(v)
-    None => ()
-  }
-  match get_attr(attrs, "markerUnits") {
-    Some(v) => marker_units = parse_marker_units(v)
-    None => ()
-  }
-  match get_attr(attrs, "orient") {
-    Some(v) => orient = parse_marker_orient(v)
-    None => ()
-  }
-  match get_attr(attrs, "viewBox") {
-    Some(v) => view_box = parse_view_box(v)
-    None => ()
-  }
-  match get_attr(attrs, "preserveAspectRatio") {
-    Some(v) => preserve_aspect_ratio = parse_preserve_aspect_ratio(v)
-    None => ()
-  }
-  match get_attr(attrs, "overflow") {
-    Some(v) => overflow_visible = trim_string(v) == "visible"
-    None => ()
-  }
+  if get_attr(attrs, "refX") is Some(v) { ref_x = parse_length(v) }
+  if get_attr(attrs, "refY") is Some(v) { ref_y = parse_length(v) }
+  if get_attr(attrs, "markerWidth") is Some(v) { marker_width = parse_length(v) }
+  if get_attr(attrs, "markerHeight") is Some(v) { marker_height = parse_length(v) }
+  if get_attr(attrs, "markerUnits") is Some(v) { marker_units = parse_marker_units(v) }
+  if get_attr(attrs, "orient") is Some(v) { orient = parse_marker_orient(v) }
+  if get_attr(attrs, "viewBox") is Some(v) { view_box = parse_view_box(v) }
+  if get_attr(attrs, "preserveAspectRatio") is Some(v) { preserve_aspect_ratio = parse_preserve_aspect_ratio(v) }
+  if get_attr(attrs, "overflow") is Some(v) { overflow_visible = trim_string(v) == "visible" }
   content.viewport_width = Some(marker_width)
   content.viewport_height = Some(marker_height)
   // Marker viewBox is handled by marker transform, not by content node.
@@ -2162,19 +2096,13 @@ fn parse_pattern_with_content(
   }
   let mut width = 0.0
   let mut height = 0.0
-  match get_attr(attrs, "width") {
-    Some(v) => {
+  if get_attr(attrs, "width") is Some(v) {
       let (val, _) = parse_length_or_percent(v)
       width = val
-    }
-    None => ()
   }
-  match get_attr(attrs, "height") {
-    Some(v) => {
+  if get_attr(attrs, "height") is Some(v) {
       let (val, _) = parse_length_or_percent(v)
       height = val
-    }
-    None => ()
   }
   let pattern_units = match get_attr(attrs, "patternUnits") {
     Some(v) => parse_pattern_units(v)
@@ -2449,14 +2377,8 @@ fn parse_gradient_stop(attrs : Array[(String, String)]) -> GradientStop {
   }
   let mut color = Color::black()
   let mut opacity = 1.0
-  match get_attr(attrs, "stop-color") {
-    Some(v) => color = parse_color(v)
-    None => ()
-  }
-  match get_attr(attrs, "stop-opacity") {
-    Some(v) => opacity = parse_number(v)
-    None => ()
-  }
+  if get_attr(attrs, "stop-color") is Some(v) { color = parse_color(v) }
+  if get_attr(attrs, "stop-opacity") is Some(v) { opacity = parse_number(v) }
   match get_attr(attrs, "style") {
     Some(style) => {
       let pairs = parse_style_pairs(style)
@@ -2593,7 +2515,7 @@ fn string_starts_with(s : String, prefix : String) -> Bool {
   if prefix.length() > s.length() {
     return false
   }
-  for i = 0; i < prefix.length(); i = i + 1 {
+  for i in 0..<prefix.length() {
     if s[i] != prefix[i] {
       return false
     }
@@ -2607,7 +2529,7 @@ fn string_ends_with(s : String, suffix : String) -> Bool {
     return false
   }
   let start = s.length() - suffix.length()
-  for i = 0; i < suffix.length(); i = i + 1 {
+  for i in 0..<suffix.length() {
     if s[start + i] != suffix[i] {
       return false
     }
@@ -2617,7 +2539,7 @@ fn string_ends_with(s : String, suffix : String) -> Bool {
 
 ///|
 fn find_first(s : String, target : Char) -> Int {
-  for i = 0; i < s.length(); i = i + 1 {
+  for i in 0..<s.length() {
     if Int::unsafe_to_char(s[i].to_int()) == target {
       return i
     }
@@ -2921,7 +2843,7 @@ fn parse_rgb_color(value : String) -> Color {
 ///|
 fn build_substring(s : String, start : Int, end : Int) -> String {
   let buf = StringBuilder::new()
-  for i = start; i < end; i = i + 1 {
+  for i in start..<end {
     buf.write_char(Int::unsafe_to_char(s[i].to_int()))
   }
   buf.to_string()
@@ -2933,7 +2855,7 @@ fn parse_points(value : String) -> Array[(Double, Double)] {
   let result : Array[(Double, Double)] = []
   let nums : Array[Double] = []
   let mut buf = StringBuilder::new()
-  for i = 0; i < value.length(); i = i + 1 {
+  for i in 0..<value.length() {
     let c = Int::unsafe_to_char(value[i].to_int())
     if c == ' ' || c == ',' || c == '\n' || c == '\r' || c == '\t' {
       if buf.to_string().length() > 0 {
@@ -3025,19 +2947,19 @@ pub fn parse_transform(value : String) -> Transform {
             args[2],
           )
         } else if args.length() >= 1 {
-          Transform::rotate(degrees_to_radians(args[0]))
+          Transform::rotate(args[0] |> degrees_to_radians)
         } else {
           Transform::identity()
         }
       "skewX" =>
         if args.length() >= 1 {
-          Transform::skew_x(degrees_to_radians(args[0]))
+          Transform::skew_x(args[0] |> degrees_to_radians)
         } else {
           Transform::identity()
         }
       "skewY" =>
         if args.length() >= 1 {
-          Transform::skew_y(degrees_to_radians(args[0]))
+          Transform::skew_y(args[0] |> degrees_to_radians)
         } else {
           Transform::identity()
         }
@@ -3065,7 +2987,7 @@ pub fn parse_transform(value : String) -> Transform {
 fn parse_transform_args(s : String) -> Array[Double] {
   let result : Array[Double] = []
   let mut buf = StringBuilder::new()
-  for i = 0; i < s.length(); i = i + 1 {
+  for i in 0..<s.length() {
     let c = Int::unsafe_to_char(s[i].to_int())
     if c == ' ' || c == ',' {
       if buf.to_string().length() > 0 {

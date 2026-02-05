@@ -500,7 +500,7 @@ test "render with clipping culls invisible nodes" {
   // Track which pixels were drawn
   let drawn_pixels : Array[(Int, Int)] = []
   let setter : PixelSetter = {
-    set: fn(x, y, _color) { drawn_pixels.push((x, y)) },
+    set: (x, y, _color) => drawn_pixels.push((x, y)),
   }
   // Render with a small clip rect that only includes the visible rect
   let clip = ClipRect::new(0, 0, 50, 50)
@@ -520,7 +520,7 @@ test "stroke dasharray" {
   // Test dashed line directly using raster function
   let drawn_pixels : Array[(Int, Int)] = []
   let setter : PixelSetter = {
-    set: fn(x, y, _color) { drawn_pixels.push((x, y)) },
+    set: (x, y, _color) => drawn_pixels.push((x, y)),
   }
   // Draw a dashed line from (0,0) to (99,0)
   raster_line_dashed(0, 0, 99, 0, Color::black(), [10.0, 5.0], 0.0, setter)
@@ -581,7 +581,7 @@ test "linear gradient rendering" {
   let scene = Scene::new(rect_node)
   let drawn_pixels : Array[(Int, Int, Color)] = []
   let setter : PixelSetter = {
-    set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+    set: (x, y, color) => drawn_pixels.push((x, y, color)),
   }
   let ctx = RenderContext::new(setter, 100, 50)
   scene.render(ctx)
@@ -592,7 +592,7 @@ test "linear gradient rendering" {
   inspect(left.2.r, content="255")
   inspect(left.2.b, content="0")
   // Check right edge is blue (last row, x=99)
-  let right = drawn_pixels.iter().find_first(fn(p) { p.0 == 99 && p.1 == 0 })
+  let right = drawn_pixels.iter().find_first((p) => p.0 == 99 && p.1 == 0)
   match right {
     Some((_, _, c)) => {
       inspect(c.r, content="0")
@@ -677,7 +677,7 @@ test "viewBox render with scaling" {
   let scene = Scene::new(rect_node)
   let drawn_pixels : Array[(Int, Int, Color)] = []
   let setter : PixelSetter = {
-    set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+    set: (x, y, color) => drawn_pixels.push((x, y, color)),
   }
   let ctx = RenderContext::new(setter, 100, 100)
   // ViewBox is 50x50, viewport is 100x100, so scale 2x
@@ -694,7 +694,7 @@ test "wpt rect-01 fill" {
     Some(doc) => {
       let image = Image::new(80, 80)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 80, 80)
       doc.render(ctx)
@@ -714,7 +714,7 @@ test "wpt rect-02 stroke" {
     Some(doc) => {
       let image = Image::new(80, 80)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 80, 80)
       doc.render(ctx)
@@ -733,7 +733,7 @@ test "wpt rect-03 rounded fill" {
     Some(doc) => {
       let image = Image::new(80, 80)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 80, 80)
       doc.render(ctx)
@@ -751,7 +751,7 @@ test "wpt rect-04 rounded stroke" {
     Some(doc) => {
       let image = Image::new(80, 80)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 80, 80)
       doc.render(ctx)
@@ -769,13 +769,13 @@ test "wpt rect-05 zero size" {
     Some(doc) => {
       let image = Image::new(100, 100)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 100, 100)
       doc.render(ctx)
       let mut any_drawn = false
-      for y = 0; y < image.height; y = y + 1 {
-        for x = 0; x < image.width; x = x + 1 {
+      for y in 0..<image.height {
+        for x in 0..<image.width {
           if not(image.get_pixel(x, y).is_transparent()) {
             any_drawn = true
           }
@@ -794,13 +794,13 @@ test "wpt circle-01 r0" {
     Some(doc) => {
       let image = Image::new(100, 100)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 100, 100)
       doc.render(ctx)
       let mut any_drawn = false
-      for y = 0; y < image.height; y = y + 1 {
-        for x = 0; x < image.width; x = x + 1 {
+      for y in 0..<image.height {
+        for x in 0..<image.width {
           if not(image.get_pixel(x, y).is_transparent()) {
             any_drawn = true
           }
@@ -819,13 +819,13 @@ test "wpt ellipse-09 zero" {
     Some(doc) => {
       let image = Image::new(100, 100)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 100, 100)
       doc.render(ctx)
       let mut any_drawn = false
-      for y = 0; y < image.height; y = y + 1 {
-        for x = 0; x < image.width; x = x + 1 {
+      for y in 0..<image.height {
+        for x in 0..<image.width {
           if not(image.get_pixel(x, y).is_transparent()) {
             any_drawn = true
           }
@@ -844,7 +844,7 @@ test "wpt line basic" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
@@ -862,7 +862,7 @@ test "wpt linecap butt no extend" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
@@ -880,7 +880,7 @@ test "wpt linecap square extends" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
@@ -898,7 +898,7 @@ test "wpt linecap round extends" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
@@ -916,7 +916,7 @@ test "wpt linejoin miter extends" {
     Some(doc) => {
       let image = Image::new(400, 400)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 400, 400)
       doc.render(ctx)
@@ -936,7 +936,7 @@ test "wpt linejoin miterlimit bevel" {
     Some(doc) => {
       let image = Image::new(400, 400)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 400, 400)
       doc.render(ctx)
@@ -959,7 +959,7 @@ test "wpt polyline basic" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
@@ -978,7 +978,7 @@ test "wpt path fill-rule evenodd hole" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
@@ -996,7 +996,7 @@ test "wpt path fill-rule nonzero solid" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
@@ -1014,7 +1014,7 @@ test "wpt polygon basic fill" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
@@ -1032,13 +1032,13 @@ test "disabled polyline empty points" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
       let mut any_drawn = false
-      for y = 0; y < image.height; y = y + 1 {
-        for x = 0; x < image.width; x = x + 1 {
+      for y in 0..<image.height {
+        for x in 0..<image.width {
           if not(image.get_pixel(x, y).is_transparent()) {
             any_drawn = true
           }
@@ -1057,13 +1057,13 @@ test "disabled polyline single point" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
       let mut any_drawn = false
-      for y = 0; y < image.height; y = y + 1 {
-        for x = 0; x < image.width; x = x + 1 {
+      for y in 0..<image.height {
+        for x in 0..<image.width {
           if not(image.get_pixel(x, y).is_transparent()) {
             any_drawn = true
           }
@@ -1082,13 +1082,13 @@ test "disabled polygon too few points" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
       let mut any_drawn = false
-      for y = 0; y < image.height; y = y + 1 {
-        for x = 0; x < image.width; x = x + 1 {
+      for y in 0..<image.height {
+        for x in 0..<image.width {
           if not(image.get_pixel(x, y).is_transparent()) {
             any_drawn = true
           }
@@ -1107,7 +1107,7 @@ test "polyline stroke width" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
@@ -1125,7 +1125,7 @@ test "polygon stroke width" {
     Some(doc) => {
       let image = Image::new(40, 40)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 40, 40)
       doc.render(ctx)
@@ -1143,13 +1143,13 @@ test "disabled circle negative r" {
     Some(doc) => {
       let image = Image::new(100, 100)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 100, 100)
       doc.render(ctx)
       let mut any_drawn = false
-      for y = 0; y < image.height; y = y + 1 {
-        for x = 0; x < image.width; x = x + 1 {
+      for y in 0..<image.height {
+        for x in 0..<image.width {
           if not(image.get_pixel(x, y).is_transparent()) {
             any_drawn = true
           }
@@ -1168,13 +1168,13 @@ test "disabled circle style negative r" {
     Some(doc) => {
       let image = Image::new(100, 100)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 100, 100)
       doc.render(ctx)
       let mut any_drawn = false
-      for y = 0; y < image.height; y = y + 1 {
-        for x = 0; x < image.width; x = x + 1 {
+      for y in 0..<image.height {
+        for x in 0..<image.width {
           if not(image.get_pixel(x, y).is_transparent()) {
             any_drawn = true
           }
@@ -1193,13 +1193,13 @@ test "disabled ellipse negative rx" {
     Some(doc) => {
       let image = Image::new(100, 100)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 100, 100)
       doc.render(ctx)
       let mut any_drawn = false
-      for y = 0; y < image.height; y = y + 1 {
-        for x = 0; x < image.width; x = x + 1 {
+      for y in 0..<image.height {
+        for x in 0..<image.width {
           if not(image.get_pixel(x, y).is_transparent()) {
             any_drawn = true
           }
@@ -1218,13 +1218,13 @@ test "disabled ellipse style auto" {
     Some(doc) => {
       let image = Image::new(100, 100)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 100, 100)
       doc.render(ctx)
       let mut any_drawn = false
-      for y = 0; y < image.height; y = y + 1 {
-        for x = 0; x < image.width; x = x + 1 {
+      for y in 0..<image.height {
+        for x in 0..<image.width {
           if not(image.get_pixel(x, y).is_transparent()) {
             any_drawn = true
           }
@@ -1240,7 +1240,7 @@ test "disabled ellipse style auto" {
 test "render rounded rect fill" {
   let image = Image::new(30, 30)
   let setter : PixelSetter = {
-    set: fn(x, y, color) { image.set_pixel(x, y, color) },
+    set: (x, y, color) => image.set_pixel(x, y, color),
   }
   let ctx = RenderContext::new(setter, 30, 30)
   let node = rect("rounded", 10.0, 10.0, 10.0, 10.0)
@@ -1256,7 +1256,7 @@ test "render rounded rect fill" {
 test "render rect stroke width" {
   let image = Image::new(30, 30)
   let setter : PixelSetter = {
-    set: fn(x, y, color) { image.set_pixel(x, y, color) },
+    set: (x, y, color) => image.set_pixel(x, y, color),
   }
   let ctx = RenderContext::new(setter, 30, 30)
   let node = rect("stroke", 10.0, 10.0, 10.0, 10.0)
@@ -1276,7 +1276,7 @@ test "render rect stroke width" {
 test "rect zero size not rendered" {
   let image = Image::new(10, 10)
   let setter : PixelSetter = {
-    set: fn(x, y, color) { image.set_pixel(x, y, color) },
+    set: (x, y, color) => image.set_pixel(x, y, color),
   }
   let ctx = RenderContext::new(setter, 10, 10)
   let node = rect("zero", 0.0, 0.0, 0.0, 10.0)
@@ -1284,8 +1284,8 @@ test "rect zero size not rendered" {
   let scene = Scene::new(node)
   scene.render(ctx)
   let mut any_drawn = false
-  for y = 0; y < image.height; y = y + 1 {
-    for x = 0; x < image.width; x = x + 1 {
+  for y in 0..<image.height {
+    for x in 0..<image.width {
       if not(image.get_pixel(x, y).is_transparent()) {
         any_drawn = true
       }
@@ -1321,7 +1321,7 @@ test "text rendering basic" {
   let scene = Scene::new(text_node)
   let drawn_pixels : Array[(Int, Int, Color)] = []
   let setter : PixelSetter = {
-    set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+    set: (x, y, color) => drawn_pixels.push((x, y, color)),
   }
   let ctx = RenderContext::new(setter, 100, 50)
   scene.render(ctx)
@@ -1544,7 +1544,7 @@ test "dirty render updates bounds" {
   let scene = Scene::new(node)
   let drawn_pixels : Array[(Int, Int, Color)] = []
   let setter : PixelSetter = {
-    set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+    set: (x, y, color) => drawn_pixels.push((x, y, color)),
   }
   let ctx = RenderContext::new(setter, 200, 200)
   // First render - should have dirty region
@@ -1567,7 +1567,7 @@ test "event system click" {
   let events = EventManager::new()
   let clicked : Array[String] = []
   events.on("btn", Click, EventHandler::{
-    call: fn(_e) { clicked.push("clicked") },
+    call: (_e) => clicked.push("clicked"),
   })
   // Click inside the button
   events.dispatch_click(50.0, 30.0, 0, scene)
@@ -1893,7 +1893,7 @@ test "render with clipPath" {
     Some(doc) => {
       let drawn_pixels : Array[(Int, Int, Color)] = []
       let setter : PixelSetter = {
-        set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+        set: (x, y, color) => drawn_pixels.push((x, y, color)),
       }
       let ctx = RenderContext::new(setter, 20, 20)
       doc.render(ctx)
@@ -1911,7 +1911,7 @@ test "render with clipPath objectBoundingBox" {
     Some(doc) => {
       let drawn_pixels : Array[(Int, Int, Color)] = []
       let setter : PixelSetter = {
-        set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+        set: (x, y, color) => drawn_pixels.push((x, y, color)),
       }
       let ctx = RenderContext::new(setter, 20, 10)
       doc.render(ctx)
@@ -1952,7 +1952,7 @@ test "pattern fill basic" {
     Some(doc) => {
       let image = Image::new(12, 12)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 12, 12)
       doc.render(ctx)
@@ -1970,7 +1970,7 @@ test "render currentColor fill" {
     Some(doc) => {
       let image = Image::new(12, 12)
       let setter : PixelSetter = {
-        set: fn(x, y, color) { image.set_pixel(x, y, color) },
+        set: (x, y, color) => image.set_pixel(x, y, color),
       }
       let ctx = RenderContext::new(setter, 12, 12)
       doc.render(ctx)
@@ -2068,7 +2068,7 @@ test "use element render with viewBox scaling" {
     Some(doc) => {
       let drawn_pixels : Array[(Int, Int, Color)] = []
       let setter : PixelSetter = {
-        set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+        set: (x, y, color) => drawn_pixels.push((x, y, color)),
       }
       let ctx = RenderContext::new(setter, 30, 30)
       doc.render(ctx)
@@ -2107,7 +2107,7 @@ test "use element referencing element outside defs" {
     Some(doc) => {
       let drawn_pixels : Array[(Int, Int, Color)] = []
       let setter : PixelSetter = {
-        set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+        set: (x, y, color) => drawn_pixels.push((x, y, color)),
       }
       let ctx = RenderContext::new(setter, 40, 20)
       doc.render(ctx)
@@ -2128,7 +2128,7 @@ test "use element referencing element defined after use (forward reference)" {
     Some(doc) => {
       let drawn_pixels : Array[(Int, Int, Color)] = []
       let setter : PixelSetter = {
-        set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+        set: (x, y, color) => drawn_pixels.push((x, y, color)),
       }
       let ctx = RenderContext::new(setter, 40, 20)
       doc.render(ctx)
@@ -2232,9 +2232,9 @@ test "filter grayscale" {
 test "filter blur" {
   // Create a simple 3x3 image with center pixel white
   let pixels : Array[Array[Color]] = []
-  for y = 0; y < 3; y = y + 1 {
+  for y in 0..<3 {
     let row : Array[Color] = []
-    for x = 0; x < 3; x = x + 1 {
+    for x in 0..<3 {
       if x == 1 && y == 1 {
         row.push(Color::white())
       } else {
@@ -2369,7 +2369,7 @@ test "radial gradient color_at midpoint" {
 test "raster rect radial gradient" {
   let mut pixel_count = 0
   let setter = PixelSetter::{
-    set: fn(_x, _y, _c) { pixel_count = pixel_count + 1 },
+    set: (_x, _y, _c) => pixel_count = pixel_count + 1,
   }
   let grad = RadialGradient::new(0.5, 0.5, 0.5, [
     { offset: 0.0, color: Color::rgb(255, 0, 0) },
@@ -2383,7 +2383,7 @@ test "raster rect radial gradient" {
 test "raster circle radial gradient" {
   let mut pixel_count = 0
   let setter = PixelSetter::{
-    set: fn(_x, _y, _c) { pixel_count = pixel_count + 1 },
+    set: (_x, _y, _c) => pixel_count = pixel_count + 1,
   }
   let grad = RadialGradient::new(0.5, 0.5, 0.5, [
     { offset: 0.0, color: Color::rgb(255, 0, 0) },
@@ -2448,7 +2448,7 @@ test "render with mask" {
     Some(doc) => {
       let drawn_pixels : Array[(Int, Int, Color)] = []
       let setter : PixelSetter = {
-        set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+        set: (x, y, color) => drawn_pixels.push((x, y, color)),
       }
       let ctx = RenderContext::new(setter, 20, 20)
       doc.render(ctx)
@@ -2466,7 +2466,7 @@ test "render with mask objectBoundingBox content" {
     Some(doc) => {
       let drawn_pixels : Array[(Int, Int, Color)] = []
       let setter : PixelSetter = {
-        set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+        set: (x, y, color) => drawn_pixels.push((x, y, color)),
       }
       let ctx = RenderContext::new(setter, 20, 10)
       doc.render(ctx)
@@ -2484,7 +2484,7 @@ test "mask bounds percent values" {
     Some(doc) => {
       let drawn_pixels : Array[(Int, Int, Color)] = []
       let setter : PixelSetter = {
-        set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+        set: (x, y, color) => drawn_pixels.push((x, y, color)),
       }
       let ctx = RenderContext::new(setter, 20, 10)
       doc.render(ctx)
@@ -2502,7 +2502,7 @@ test "maskUnits userSpaceOnUse respects viewBox scale" {
     Some(doc) => {
       let drawn_pixels : Array[(Int, Int, Color)] = []
       let setter : PixelSetter = {
-        set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+        set: (x, y, color) => drawn_pixels.push((x, y, color)),
       }
       let ctx = RenderContext::new(setter, 20, 20)
       doc.render(ctx)
@@ -2520,7 +2520,7 @@ test "maskUnits userSpaceOnUse with rotation transform" {
     Some(doc) => {
       let drawn_pixels : Array[(Int, Int, Color)] = []
       let setter : PixelSetter = {
-        set: fn(x, y, color) { drawn_pixels.push((x, y, color)) },
+        set: (x, y, color) => drawn_pixels.push((x, y, color)),
       }
       let ctx = RenderContext::new(setter, 30, 30)
       doc.render(ctx)
@@ -2603,9 +2603,9 @@ test "apply mask to image" {
   src.fill_rect(0, 0, 10, 10, Color::rgba(255, 0, 0, 255))
   // Create mask (gradient from white to black)
   let mask = Image::new(10, 10)
-  for x = 0; x < 10; x = x + 1 {
+  for x in 0..<10 {
     let gray = x * 255 / 9
-    for y = 0; y < 10; y = y + 1 {
+    for y in 0..<10 {
       mask.set_pixel(x, y, Color::rgb(gray, gray, gray))
     }
   }
