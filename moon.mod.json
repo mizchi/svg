@@ -1,0 +1,18 @@
+{
+  "name": "mizchi/svg",
+  "version": "0.1.0",
+  "description": "Standalone SVG scene graph and renderer",
+  "deps": {
+    "mizchi/text": {
+      "path": "../text"
+    }
+  },
+  "source": "src",
+  "readme": "README.mbt.md",
+  "repository": "https://github.com/mizchi/svg",
+  "license": "Apache-2.0",
+  "keywords": [
+    "svg",
+    "graphics"
+  ]
+}
