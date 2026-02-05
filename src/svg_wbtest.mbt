@@ -592,7 +592,7 @@ test "linear gradient rendering" {
   inspect(left.2.r, content="255")
   inspect(left.2.b, content="0")
   // Check right edge is blue (last row, x=99)
-  let right = drawn_pixels.iter().find_first((p) => p.0 == 99 && p.1 == 0)
+  let right = drawn_pixels.iter().find_first(p => p.0 == 99 && p.1 == 0)
   match right {
     Some((_, _, c)) => {
       inspect(c.r, content="0")
@@ -1566,9 +1566,7 @@ test "event system click" {
   let scene = Scene::new(node)
   let events = EventManager::new()
   let clicked : Array[String] = []
-  events.on("btn", Click, EventHandler::{
-    call: (_e) => clicked.push("clicked"),
-  })
+  events.on("btn", Click, EventHandler::{ call: _e => clicked.push("clicked") })
   // Click inside the button
   events.dispatch_click(50.0, 30.0, 0, scene)
   inspect(clicked.length(), content="1")

@@ -72,10 +72,18 @@ fn bbox_not_green(img : @svg.Image) -> (Int, Int, Int, Int)? {
       let c = img.pixels[i]
       let is_green = c.r == 0 && c.g == 128 && c.b == 0 && c.a == 255
       if not(is_green) {
-        if x < min_x { min_x = x }
-        if y < min_y { min_y = y }
-        if x > max_x { max_x = x }
-        if y > max_y { max_y = y }
+        if x < min_x {
+          min_x = x
+        }
+        if y < min_y {
+          min_y = y
+        }
+        if x > max_x {
+          max_x = x
+        }
+        if y > max_y {
+          max_y = y
+        }
       }
     }
   }
@@ -98,10 +106,18 @@ fn bbox_green(img : @svg.Image) -> (Int, Int, Int, Int)? {
       let c = img.pixels[i]
       let is_green = c.r == 0 && c.g == 128 && c.b == 0 && c.a == 255
       if is_green {
-        if x < min_x { min_x = x }
-        if y < min_y { min_y = y }
-        if x > max_x { max_x = x }
-        if y > max_y { max_y = y }
+        if x < min_x {
+          min_x = x
+        }
+        if y < min_y {
+          min_y = y
+        }
+        if x > max_x {
+          max_x = x
+        }
+        if y > max_y {
+          max_y = y
+        }
       }
     }
   }
@@ -175,17 +191,19 @@ fn main {
             " ref=" +
             count_color(imgB, 0, 128, 0, 255).to_string(),
           )
-          if (bbox_not_green(imgA)) is Some((x0, y0, x1, y1)) { println(
-                "[wpt-svg] not-green-bbox: (" +
-                x0.to_string() +
-                "," +
-                y0.to_string() +
-                ")-(" +
-                x1.to_string() +
-                "," +
-                y1.to_string() +
-                ")",
-              ) }
+          if bbox_not_green(imgA) is Some((x0, y0, x1, y1)) {
+            println(
+              "[wpt-svg] not-green-bbox: (" +
+              x0.to_string() +
+              "," +
+              y0.to_string() +
+              ")-(" +
+              x1.to_string() +
+              "," +
+              y1.to_string() +
+              ")",
+            )
+          }
           match bbox_green(imgA) {
             Some((x0, y0, x1, y1)) =>
               println(

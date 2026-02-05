@@ -52,7 +52,7 @@ pub fn render_svg_to_image(
   width : Int,
   height : Int,
 ) -> Image? {
-  parse_svg_document(svg_str).map(
-    doc => render_svg_document_to_image(doc, width, height),
-  )
+  parse_svg_document(svg_str).map(doc => render_svg_document_to_image(
+    doc, width, height,
+  ))
 }

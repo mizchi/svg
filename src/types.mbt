@@ -159,8 +159,30 @@ fn get_alignment_factors(align : Align) -> (Double, Double) {
 }
 
 ///|
-/// SVG path commands - re-exported from mizchi/text
-pub typealias PathCommand = @text.PathCommand
+/// SVG path commands (full SVG 1.1 spec)
+pub(all) enum PathCommand {
+  // Absolute commands
+  MoveTo(Double, Double) // M x y
+  LineTo(Double, Double) // L x y
+  HorizontalLineTo(Double) // H x
+  VerticalLineTo(Double) // V y
+  CurveTo(Double, Double, Double, Double, Double, Double) // C x1 y1 x2 y2 x y
+  SmoothCurveTo(Double, Double, Double, Double) // S x2 y2 x y
+  QuadraticCurveTo(Double, Double, Double, Double) // Q x1 y1 x y
+  SmoothQuadraticCurveTo(Double, Double) // T x y
+  ArcTo(Double, Double, Double, Bool, Bool, Double, Double) // A rx ry rotation large-arc sweep x y
+  ClosePath // Z
+  // Relative commands
+  MoveToRel(Double, Double) // m dx dy
+  LineToRel(Double, Double) // l dx dy
+  HorizontalLineToRel(Double) // h dx
+  VerticalLineToRel(Double) // v dy
+  CurveToRel(Double, Double, Double, Double, Double, Double) // c dx1 dy1 dx2 dy2 dx dy
+  SmoothCurveToRel(Double, Double, Double, Double) // s dx2 dy2 dx dy
+  QuadraticCurveToRel(Double, Double, Double, Double) // q dx1 dy1 dx dy
+  SmoothQuadraticCurveToRel(Double, Double) // t dx dy
+  ArcToRel(Double, Double, Double, Bool, Bool, Double, Double) // a rx ry rotation large-arc sweep dx dy
+} derive(Show)
 
 ///|
 /// SVG shape primitives
@@ -1390,11 +1412,10 @@ pub fn EventManager::dispatch_mouse_up(
   scene : Scene,
 ) -> Unit {
   // End drag if dragging
-  if (self.dragging_node) is Some(node_id) { {
-      let event = PointerEvent::new(x, y, button, node_id)
-      self.dispatch_to_node(node_id, DragEnd, event)
-      self.dragging_node = None
-    }
+  if self.dragging_node is Some(node_id) {
+    let event = PointerEvent::new(x, y, button, node_id)
+    self.dispatch_to_node(node_id, DragEnd, event)
+    self.dragging_node = None
   }
   // Dispatch mouse up
   let hit_nodes = scene.root.hit_test_all(x, y)
@@ -1416,10 +1437,9 @@ pub fn EventManager::dispatch_mouse_move(
   scene : Scene,
 ) -> Unit {
   // Handle drag
-  if (self.dragging_node) is Some(node_id) { {
-      let event = PointerEvent::new(x, y, 0, node_id)
-      self.dispatch_to_node(node_id, DragMove, event)
-    }
+  if self.dragging_node is Some(node_id) {
+    let event = PointerEvent::new(x, y, 0, node_id)
+    self.dispatch_to_node(node_id, DragMove, event)
   }
   // Handle hover (enter/leave)
   let hit_nodes = scene.root.hit_test_all(x, y)
@@ -2645,8 +2665,8 @@ pub fn apply_blur(
       let mut g = 0
       let mut b = 0
       let mut a = 0
-      for ky in -radius..=radius {
-        for kx in -radius..=radius {
+      for ky in -radius..<=radius {
+        for kx in -radius..<=radius {
           let sy = clamp_int(y + ky, 0, height - 1)
           let sx = clamp_int(x + kx, 0, width - 1)
           let c = pixels[sy][sx]
@@ -3231,6 +3251,7 @@ pub fn Image::apply_blur_in_place(self : Image, radius : Int) -> Unit {
     }
   }
 }
+
 ///|
 /// Apply brightness filter in place
 pub fn Image::apply_brightness_in_place(self : Image, factor : Double) -> Unit {
@@ -3597,8 +3618,9 @@ pub fn AnimatedSprite::from_range(
   frame_duration : Double,
 ) -> AnimatedSprite {
   let frames : Array[Int] = []
-  for i in start..=end {
-    frames.push(i) }
+  for i in start..<=end {
+    frames.push(i)
+  }
   AnimatedSprite::new(sheet, frames, frame_duration)
 }
 
@@ -4450,45 +4472,44 @@ pub fn TextBlock::wrap_text(self : TextBlock) -> Array[String] {
     full_text = full_text + span.text
   }
   // If no inline_size, return as single line
-  if (self.inline_size) is Some(max_width) { {
-      let char_width = self.style.font_size * 0.6
-      // Handle white-space mode
-      match self.style.white_space {
-        Pre | NoWrap => {
-          // No wrapping
-          result.push(full_text)
-          return result
-        }
-        _ => {
-          // Wrap at word boundaries
-          let words = split_words(full_text)
-          let mut current_line = ""
-          let mut current_width = 0.0
-          for word in words {
-            let word_width = word.length().to_double() * char_width +
-              self.style.letter_spacing * (word.length() - 1).to_double()
-            let space_width = char_width + self.style.word_spacing
-            if current_line.length() == 0 {
-              current_line = word
-              current_width = word_width
-            } else if current_width + space_width + word_width <= max_width {
-              current_line = current_line + " " + word
-              current_width = current_width + space_width + word_width
-            } else {
-              result.push(current_line)
-              current_line = word
-              current_width = word_width
-            }
-          }
-          if current_line.length() > 0 {
+  if self.inline_size is Some(max_width) {
+    let char_width = self.style.font_size * 0.6
+    // Handle white-space mode
+    match self.style.white_space {
+      Pre | NoWrap => {
+        // No wrapping
+        result.push(full_text)
+        return result
+      }
+      _ => {
+        // Wrap at word boundaries
+        let words = split_words(full_text)
+        let mut current_line = ""
+        let mut current_width = 0.0
+        for word in words {
+          let word_width = word.length().to_double() * char_width +
+            self.style.letter_spacing * (word.length() - 1).to_double()
+          let space_width = char_width + self.style.word_spacing
+          if current_line.length() == 0 {
+            current_line = word
+            current_width = word_width
+          } else if current_width + space_width + word_width <= max_width {
+            current_line = current_line + " " + word
+            current_width = current_width + space_width + word_width
+          } else {
             result.push(current_line)
+            current_line = word
+            current_width = word_width
           }
+        }
+        if current_line.length() > 0 {
+          result.push(current_line)
         }
       }
-    } } else { {
-      result.push(full_text)
-      return result
     }
+  } else {
+    result.push(full_text)
+    return result
   }
   result
 }
@@ -4764,7 +4785,8 @@ pub fn UseElement::get_id(self : UseElement) -> String {
   if self.href.length() > 0 && self.href[0].unsafe_to_char() == '#' {
     let buf = StringBuilder::new()
     for i in 1..<self.href.length() {
-      buf.write_char(self.href[i].unsafe_to_char()) }
+      buf.write_char(self.href[i].unsafe_to_char())
+    }
     decode_percent(buf.to_string())
   } else {
     self.href

@@ -27,7 +27,7 @@ pub fn PixelSetter::with_clip(
   clip : ClipRect,
 ) -> PixelSetter {
   let inner_set = self.set
-  { set: (x, y, color) => { if clip.contains(x, y) { inner_set(x, y, color) } } }
+  { set: (x, y, color) => if clip.contains(x, y) { inner_set(x, y, color) } }
 }
 
 ///|
@@ -111,7 +111,7 @@ pub fn raster_line_dashed(
   // Dash pattern state
   let mut dash_pos = -dashoffset
   // Normalize dashoffset to be within pattern
-  let total_dash = dasharray.fold(init=0.0, (acc, v) => { acc + v })
+  let total_dash = dasharray.fold(init=0.0, (acc, v) => acc + v)
   while dash_pos < 0.0 {
     dash_pos = dash_pos + total_dash
   }
@@ -194,7 +194,7 @@ pub fn raster_polyline_dashed(
     let len = (dx * dx + dy * dy).sqrt()
     offset = offset + len
     // Normalize offset within dash pattern total length
-    let total_dash = dasharray.fold(init=0.0, (acc, v) => { acc + v })
+    let total_dash = dasharray.fold(init=0.0, (acc, v) => acc + v)
     while offset >= total_dash {
       offset = offset - total_dash
     }
@@ -527,8 +527,8 @@ pub fn raster_circle_radial_gradient(
     return
   }
   let r_sq = r * r
-  for py in (cy - r)..=(cy + r) {
-    for px in (cx - r)..=(cx + r) {
+  for py in (cy - r)..<=(cy + r) {
+    for px in (cx - r)..<=(cx + r) {
       let dx = px - cx
       let dy = py - cy
       let dist_sq = dx * dx + dy * dy
@@ -567,8 +567,8 @@ pub fn raster_ellipse_radial_gradient(
   if rx <= 0 || ry <= 0 {
     return
   }
-  for py in (cy - ry)..=(cy + ry) {
-    for px in (cx - rx)..=(cx + rx) {
+  for py in (cy - ry)..<=(cy + ry) {
+    for px in (cx - rx)..<=(cx + rx) {
       let dx = (px - cx).to_double() / rx.to_double()
       let dy = (py - cy).to_double() / ry.to_double()
       let dist_sq = dx * dx + dy * dy
@@ -766,10 +766,10 @@ pub fn raster_circle_fill(
   let mut err = 1 - r
   while x >= y {
     // Draw horizontal lines for each y level
-    for px in (cx - x)..=(cx + x) {
+    for px in (cx - x)..<=(cx + x) {
       setter..pixel(px, cy + y, color)..pixel(px, cy - y, color)
     }
-    for px in (cx - y)..=(cx + y) {
+    for px in (cx - y)..<=(cx + y) {
       setter..pixel(px, cy + x, color)..pixel(px, cy - x, color)
     }
     y = y + 1
@@ -798,14 +798,14 @@ pub fn raster_ellipse_stroke(
   }
   if rx <= 0 {
     // Vertical line
-    for y in (cy - ry)..=(cy + ry) {
+    for y in (cy - ry)..<=(cy + ry) {
       setter.pixel(cx, y, color)
     }
     return
   }
   if ry <= 0 {
     // Horizontal line
-    for x in (cx - rx)..=(cx + rx) {
+    for x in (cx - rx)..<=(cx + rx) {
       setter.pixel(x, cy, color)
     }
     return
@@ -938,7 +938,8 @@ pub fn raster_polygons_fill_rule(
     if poly.length() < 3 {
       continue
     }
-    for i in 0..<poly.length() { let y = poly[i].1
+    for i in 0..<poly.length() {
+      let y = poly[i].1
       if not(has_point) {
         min_y = y
         max_y = y
@@ -950,7 +951,8 @@ pub fn raster_polygons_fill_rule(
         if y > max_y {
           max_y = y
         }
-      } }
+      }
+    }
   }
   if not(has_point) {
     return
@@ -964,7 +966,8 @@ pub fn raster_polygons_fill_rule(
       if n < 3 {
         continue
       }
-      for i in 0..<n { let j = (i + 1) % n
+      for i in 0..<n {
+        let j = (i + 1) % n
         let (x1, y1) = poly[i]
         let (x2, y2) = poly[j]
         // Check if edge crosses this scanline
@@ -973,7 +976,8 @@ pub fn raster_polygons_fill_rule(
           let x = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
           let winding = if y1 < y2 { 1 } else { -1 }
           intersections.push((x, winding))
-        } }
+        }
+      }
     }
     if intersections.length() == 0 {
       continue
@@ -987,7 +991,9 @@ pub fn raster_polygons_fill_rule(
         while i + 1 < intersections.length() {
           let x_start = intersections[i].0
           let x_end = intersections[i + 1].0
-          for x in x_start..=x_end { setter.pixel(x, y, color) }
+          for x in x_start..<=x_end {
+            setter.pixel(x, y, color)
+          }
           i = i + 2
         }
       }
@@ -999,7 +1005,9 @@ pub fn raster_polygons_fill_rule(
           if winding != 0 {
             let x_start = intersections[i].0
             let x_end = intersections[i + 1].0
-            for x in x_start..=x_end { setter.pixel(x, y, color) }
+            for x in x_start..<=x_end {
+              setter.pixel(x, y, color)
+            }
           }
           i = i + 1
         }
@@ -1019,10 +1027,12 @@ pub fn raster_polygon_stroke(
   if n < 2 {
     return
   }
-  for i in 0..<n { let j = (i + 1) % n
+  for i in 0..<n {
+    let j = (i + 1) % n
     let (x1, y1) = points[i]
     let (x2, y2) = points[j]
-    raster_line(x1, y1, x2, y2, color, setter) }
+    raster_line(x1, y1, x2, y2, color, setter)
+  }
 }
 
 ///|
@@ -1057,13 +1067,15 @@ fn min_int(a : Int, b : Int) -> Int {
 /// Helper: simple insertion sort for intersections by x
 fn sort_intersections(arr : Array[(Int, Int)]) -> Unit {
   let n = arr.length()
-  for i in 1..<n { let key = arr[i]
+  for i in 1..<n {
+    let key = arr[i]
     let mut j = i - 1
     while j >= 0 && arr[j].0 > key.0 {
       arr[j + 1] = arr[j]
       j = j - 1
     }
-    arr[j + 1] = key }
+    arr[j + 1] = key
+  }
 }
 
 ///|

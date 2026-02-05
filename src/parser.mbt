@@ -409,8 +409,12 @@ fn parse_element(
       apply_attributes(node, attrs)
       if tag_name == "svg" {
         if parent_tag != "" {
-          if get_attr(attrs, "width") is Some(v) { node.viewport_width = v |> parse_length |> Some }
-          if get_attr(attrs, "height") is Some(v) { node.viewport_height = v |> parse_length |> Some }
+          if get_attr(attrs, "width") is Some(v) {
+            node.viewport_width = v |> parse_length |> Some
+          }
+          if get_attr(attrs, "height") is Some(v) {
+            node.viewport_height = v |> parse_length |> Some
+          }
         }
         match get_attr(attrs, "overflow") {
           Some(v) =>
@@ -603,9 +607,10 @@ fn apply_attribute(node : SVGNode, name : String, value : String) -> Unit {
       node.preserve_aspect_ratio_is_set = true
     }
     "clip-path" =>
-      if parse_url_ref(value) is Some(id) { node.set_clip_path(id) }
-    "mask" =>
-      if parse_url_ref(value) is Some(id) { node.set_mask(id) }
+      if parse_url_ref(value) is Some(id) {
+        node.set_clip_path(id)
+      }
+    "mask" => if parse_url_ref(value) is Some(id) { node.set_mask(id) }
     "requiredExtensions" => node.opacity = 0.0
     "x" =>
       match node.shape {
@@ -961,7 +966,9 @@ fn apply_presentation_attributes(
 
 ///|
 fn extract_paint_order(attrs : Array[(String, String)]) -> PaintOrder? {
-  if get_attr(attrs, "paint-order") is Some(v) { return v |> parse_paint_order |> Some }
+  if get_attr(attrs, "paint-order") is Some(v) {
+    return v |> parse_paint_order |> Some
+  }
   match get_attr(attrs, "style") {
     Some(style) => {
       let pairs = parse_style_pairs(style)
@@ -1314,7 +1321,9 @@ fn parse_use(
             None => node.id = ""
           }
           apply_presentation_attributes(node, attrs)
-          if extract_paint_order(attrs) is Some(order) { apply_paint_order_recursive(node, order) }
+          if extract_paint_order(attrs) is Some(order) {
+            apply_paint_order_recursive(node, order)
+          }
           Some(node)
         }
         None => None
@@ -1352,7 +1361,9 @@ fn parse_use(
             None => node.id = ""
           }
           apply_presentation_attributes(node, attrs)
-          if extract_paint_order(attrs) is Some(order) { apply_paint_order_recursive(node, order) }
+          if extract_paint_order(attrs) is Some(order) {
+            apply_paint_order_recursive(node, order)
+          }
           Some(node)
         }
         None => {
@@ -1431,7 +1442,9 @@ fn parse_use(
                 None => node.id = ""
               }
               apply_presentation_attributes(node, attrs)
-              if extract_paint_order(attrs) is Some(order) { apply_paint_order_recursive(node, order) }
+              if extract_paint_order(attrs) is Some(order) {
+                apply_paint_order_recursive(node, order)
+              }
               Some(node)
             }
             None => None
@@ -1698,7 +1711,9 @@ fn find_node_by_id(node : SVGNode, id : String) -> SVGNode? {
     return Some(node)
   }
   for child in node.children {
-    if find_node_by_id(child, id) is Some(found) { return Some(found) }
+    if find_node_by_id(child, id) is Some(found) {
+      return Some(found)
+    }
   }
   None
 }
@@ -1894,28 +1909,28 @@ fn parse_mask_with_content(
   let mut width_is_percent = false
   let mut height_is_percent = false
   if get_attr(attrs, "x") is Some(v) {
-      let (val, is_percent) = parse_mask_length(v, mask_units)
-      x = val
-      x_is_percent = is_percent
-      has_bounds = true
+    let (val, is_percent) = parse_mask_length(v, mask_units)
+    x = val
+    x_is_percent = is_percent
+    has_bounds = true
   }
   if get_attr(attrs, "y") is Some(v) {
-      let (val, is_percent) = parse_mask_length(v, mask_units)
-      y = val
-      y_is_percent = is_percent
-      has_bounds = true
+    let (val, is_percent) = parse_mask_length(v, mask_units)
+    y = val
+    y_is_percent = is_percent
+    has_bounds = true
   }
   if get_attr(attrs, "width") is Some(v) {
-      let (val, is_percent) = parse_mask_length(v, mask_units)
-      width = val
-      width_is_percent = is_percent
-      has_bounds = true
+    let (val, is_percent) = parse_mask_length(v, mask_units)
+    width = val
+    width_is_percent = is_percent
+    has_bounds = true
   }
   if get_attr(attrs, "height") is Some(v) {
-      let (val, is_percent) = parse_mask_length(v, mask_units)
-      height = val
-      height_is_percent = is_percent
-      has_bounds = true
+    let (val, is_percent) = parse_mask_length(v, mask_units)
+    height = val
+    height_is_percent = is_percent
+    has_bounds = true
   }
   let base = if has_bounds {
     Mask::with_bounds(id, content, x, y, width, height)
@@ -2022,15 +2037,33 @@ fn parse_marker_with_content(
   let mut view_box : ViewBox? = None
   let mut preserve_aspect_ratio = PreserveAspectRatio::default()
   let mut overflow_visible = false
-  if get_attr(attrs, "refX") is Some(v) { ref_x = parse_length(v) }
-  if get_attr(attrs, "refY") is Some(v) { ref_y = parse_length(v) }
-  if get_attr(attrs, "markerWidth") is Some(v) { marker_width = parse_length(v) }
-  if get_attr(attrs, "markerHeight") is Some(v) { marker_height = parse_length(v) }
-  if get_attr(attrs, "markerUnits") is Some(v) { marker_units = parse_marker_units(v) }
-  if get_attr(attrs, "orient") is Some(v) { orient = parse_marker_orient(v) }
-  if get_attr(attrs, "viewBox") is Some(v) { view_box = parse_view_box(v) }
-  if get_attr(attrs, "preserveAspectRatio") is Some(v) { preserve_aspect_ratio = parse_preserve_aspect_ratio(v) }
-  if get_attr(attrs, "overflow") is Some(v) { overflow_visible = trim_string(v) == "visible" }
+  if get_attr(attrs, "refX") is Some(v) {
+    ref_x = parse_length(v)
+  }
+  if get_attr(attrs, "refY") is Some(v) {
+    ref_y = parse_length(v)
+  }
+  if get_attr(attrs, "markerWidth") is Some(v) {
+    marker_width = parse_length(v)
+  }
+  if get_attr(attrs, "markerHeight") is Some(v) {
+    marker_height = parse_length(v)
+  }
+  if get_attr(attrs, "markerUnits") is Some(v) {
+    marker_units = parse_marker_units(v)
+  }
+  if get_attr(attrs, "orient") is Some(v) {
+    orient = parse_marker_orient(v)
+  }
+  if get_attr(attrs, "viewBox") is Some(v) {
+    view_box = parse_view_box(v)
+  }
+  if get_attr(attrs, "preserveAspectRatio") is Some(v) {
+    preserve_aspect_ratio = parse_preserve_aspect_ratio(v)
+  }
+  if get_attr(attrs, "overflow") is Some(v) {
+    overflow_visible = trim_string(v) == "visible"
+  }
   content.viewport_width = Some(marker_width)
   content.viewport_height = Some(marker_height)
   // Marker viewBox is handled by marker transform, not by content node.
@@ -2097,12 +2130,12 @@ fn parse_pattern_with_content(
   let mut width = 0.0
   let mut height = 0.0
   if get_attr(attrs, "width") is Some(v) {
-      let (val, _) = parse_length_or_percent(v)
-      width = val
+    let (val, _) = parse_length_or_percent(v)
+    width = val
   }
   if get_attr(attrs, "height") is Some(v) {
-      let (val, _) = parse_length_or_percent(v)
-      height = val
+    let (val, _) = parse_length_or_percent(v)
+    height = val
   }
   let pattern_units = match get_attr(attrs, "patternUnits") {
     Some(v) => parse_pattern_units(v)
@@ -2377,8 +2410,12 @@ fn parse_gradient_stop(attrs : Array[(String, String)]) -> GradientStop {
   }
   let mut color = Color::black()
   let mut opacity = 1.0
-  if get_attr(attrs, "stop-color") is Some(v) { color = parse_color(v) }
-  if get_attr(attrs, "stop-opacity") is Some(v) { opacity = parse_number(v) }
+  if get_attr(attrs, "stop-color") is Some(v) {
+    color = parse_color(v)
+  }
+  if get_attr(attrs, "stop-opacity") is Some(v) {
+    opacity = parse_number(v)
+  }
   match get_attr(attrs, "style") {
     Some(style) => {
       let pairs = parse_style_pairs(style)

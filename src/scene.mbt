@@ -312,7 +312,9 @@ fn compute_dirty_region(
       dirty_bbox = dirty_bbox.union(transformed_bbox)
     }
     // Include previous bounds if available
-    if node.prev_bounds is Some(prev) { dirty_bbox = dirty_bbox.union(prev) }
+    if node.prev_bounds is Some(prev) {
+      dirty_bbox = dirty_bbox.union(prev)
+    }
   }
   // Recurse to children
   for child in node.children {
@@ -656,14 +658,7 @@ pub fn Scene::render(self : Scene, ctx : RenderContext) -> Unit {
       )
     None => Transform::identity()
   }
-  render_node(
-    self.root,
-    base_transform,
-    ctx,
-    resources,
-    true,
-    Color::black(),
-  )
+  render_node(self.root, base_transform, ctx, resources, true, Color::black())
   self.clear_dirty()
 }
 
@@ -1271,7 +1266,9 @@ fn render_pattern_fill(
       let (lx, ly) = inv.apply(wx, wy)
       if hit_test_shape(lx, ly, shape) {
         let (px, py) = pattern_inv.apply(lx, ly)
-        if pattern.get_color_at(px, py, bbox_local) is Some(color) { ctx.setter.pixel(x, y, apply_opacity(color, opacity)) }
+        if pattern.get_color_at(px, py, bbox_local) is Some(color) {
+          ctx.setter.pixel(x, y, apply_opacity(color, opacity))
+        }
       }
     }
   }
@@ -3173,7 +3170,11 @@ fn render_markers_for_path_commands(
                     use_transformed,
                   )
                   let ang = angle_mid_vec(in_dx, in_dy, out_dx, out_dy, eps)
-                  if use_transformed { to_local_angle(ang) } else { ang }
+                  if use_transformed {
+                    to_local_angle(ang)
+                  } else {
+                    ang
+                  }
                 } else if p.has_out {
                   angle_from_vec(p.out_dx, p.out_dy, use_transformed, transform)
                 } else if p.has_in {
