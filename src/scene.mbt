@@ -585,6 +585,8 @@ pub(all) struct RenderContext {
   height : Int
   flatness : Double // For path flattening
   clip : ClipRect? // Optional clipping rectangle for culling
+  /// Font callback: (codepoint, font_size) -> (path_commands, advance_width)
+  text_to_paths : ((Int, Double) -> (Array[PathCommand], Double))?
 }
 
 ///|
@@ -1059,7 +1061,7 @@ fn make_image_context(
   let setter : PixelSetter = {
     set: (x, y, color) => image.set_pixel(x, y, color),
   }
-  { setter, width, height, flatness, clip: None }
+  { setter, width, height, flatness, clip: None, text_to_paths: None }
 }
 
 ///|
@@ -3896,31 +3898,84 @@ fn render_text(
   let (sx, _) = transform.get_scale()
   let scaled_size = (font_size * sx).to_int()
   // Fill color for text
-  match resolve_paint_for_render(node.fill, node_color, resources) {
-    ResolvedPaint::SolidColor(color) =>
-      if node.fill_opacity > 0.0 {
-        let fill_color = apply_opacity(color, node.fill_opacity * node.opacity)
-        raster_text(
-          tx.to_int(),
-          ty.to_int(),
-          text,
-          scaled_size,
-          fill_color,
-          ctx.setter,
-        )
+  let fill_paint = resolve_paint_for_render(node.fill, node_color, resources)
+  match ctx.text_to_paths {
+    Some(to_paths) => {
+      // Use font callback: render each character as path commands
+      let fill_color : Color? = match fill_paint {
+        ResolvedPaint::SolidColor(color) =>
+          if node.fill_opacity > 0.0 {
+            Some(apply_opacity(color, node.fill_opacity * node.opacity))
+          } else {
+            None
+          }
+        _ => None
       }
-    ResolvedPaint::Pattern(pattern) =>
-      if node.fill_opacity > 0.0 {
-        render_pattern_fill(
-          node.shape,
-          transform,
-          ctx,
-          pattern,
-          node.fill_opacity * node.opacity,
-        )
+      let mut cursor_x = tx
+      for i in 0..<text.length() {
+        let codepoint = text[i].unsafe_to_char().to_int()
+        let (cmds, advance) = to_paths(codepoint, font_size * sx)
+        // Translate commands to cursor position
+        let translated = translate_path_commands(cmds, cursor_x, ty)
+        raster_path(translated, fill_color, None, ctx.flatness, ctx.setter)
+        cursor_x = cursor_x + advance
       }
-    _ => ()
+    }
+    None =>
+      // Fallback: bitmap font
+      match fill_paint {
+        ResolvedPaint::SolidColor(color) =>
+          if node.fill_opacity > 0.0 {
+            let fill_color = apply_opacity(
+              color,
+              node.fill_opacity * node.opacity,
+            )
+            raster_text(
+              tx.to_int(),
+              ty.to_int(),
+              text,
+              scaled_size,
+              fill_color,
+              ctx.setter,
+            )
+          }
+        ResolvedPaint::Pattern(pattern) =>
+          if node.fill_opacity > 0.0 {
+            render_pattern_fill(
+              node.shape,
+              transform,
+              ctx,
+              pattern,
+              node.fill_opacity * node.opacity,
+            )
+          }
+        _ => ()
+      }
   }
+}
+
+///|
+/// Translate path commands by (dx, dy) offset
+fn translate_path_commands(
+  commands : Array[PathCommand],
+  dx : Double,
+  dy : Double,
+) -> Array[PathCommand] {
+  let result : Array[PathCommand] = []
+  for cmd in commands {
+    let translated : PathCommand = match cmd {
+      MoveTo(x, y) => MoveTo(x + dx, y + dy)
+      LineTo(x, y) => LineTo(x + dx, y + dy)
+      QuadraticCurveTo(cx, cy, x, y) =>
+        QuadraticCurveTo(cx + dx, cy + dy, x + dx, y + dy)
+      CurveTo(cx1, cy1, cx2, cy2, x, y) =>
+        CurveTo(cx1 + dx, cy1 + dy, cx2 + dx, cy2 + dy, x + dx, y + dy)
+      ClosePath => ClosePath
+      other => other
+    }
+    result.push(translated)
+  }
+  result
 }
 
 ///|
@@ -4018,7 +4073,7 @@ pub fn RenderContext::new(
   width : Int,
   height : Int,
 ) -> RenderContext {
-  { setter, width, height, flatness: 0.5, clip: None }
+  { setter, width, height, flatness: 0.5, clip: None, text_to_paths: None }
 }
 
 ///|
@@ -4029,7 +4084,14 @@ pub fn RenderContext::with_clip(
   height : Int,
   clip : ClipRect,
 ) -> RenderContext {
-  { setter, width, height, flatness: 0.5, clip: Some(clip) }
+  {
+    setter,
+    width,
+    height,
+    flatness: 0.5,
+    clip: Some(clip),
+    text_to_paths: None,
+  }
 }
 
 ///|
@@ -4045,5 +4107,6 @@ pub fn RenderContext::for_camera(
     height: camera.viewport_height,
     flatness: 0.5,
     clip: Some(clip),
+    text_to_paths: None,
   }
 }

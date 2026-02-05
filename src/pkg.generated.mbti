@@ -786,6 +786,7 @@ pub(all) struct RenderContext {
   height : Int
   flatness : Double
   clip : ClipRect?
+  text_to_paths : ((Int, Double) -> (Array[PathCommand], Double))?
 }
 pub fn RenderContext::for_camera(PixelSetter, Camera) -> Self
 pub fn RenderContext::new(PixelSetter, Int, Int) -> Self
