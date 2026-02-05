@@ -145,9 +145,9 @@ fn PathParser::parse_flag(self : PathParser) -> Bool? {
 
 ///|
 /// Parse a path data string into an array of path commands
-pub fn parse_path(data : String) -> Array[PathCommand] {
+pub fn parse_path(data : String) -> Array[@text.PathCommand] {
   let parser = PathParser::new(data)
-  let commands : Array[PathCommand] = []
+  let commands : Array[@text.PathCommand] = []
   let mut last_cmd = 'M'
   while not(parser.is_end()) {
     parser.skip_whitespace()
@@ -250,7 +250,7 @@ pub fn parse_path(data : String) -> Array[PathCommand] {
             parser.parse_number(),
           ) {
           (Some(x2), Some(y2), Some(x), Some(y)) =>
-            commands.push(SmoothCurveTo(x2, y2, x, y))
+            commands.push(@text.SmoothCurveTo(x2, y2, x, y))
           _ => break
         }
       's' =>
@@ -262,7 +262,7 @@ pub fn parse_path(data : String) -> Array[PathCommand] {
             parser.parse_number(),
           ) {
           (Some(dx2), Some(dy2), Some(dx), Some(dy)) =>
-            commands.push(SmoothCurveToRel(dx2, dy2, dx, dy))
+            commands.push(@text.SmoothCurveToRel(dx2, dy2, dx, dy))
           _ => break
         }
       'Q' =>
@@ -274,7 +274,7 @@ pub fn parse_path(data : String) -> Array[PathCommand] {
             parser.parse_number(),
           ) {
           (Some(x1), Some(y1), Some(x), Some(y)) =>
-            commands.push(QuadraticCurveTo(x1, y1, x, y))
+            commands.push(@text.QuadraticCurveTo(x1, y1, x, y))
           _ => break
         }
       'q' =>
@@ -286,18 +286,19 @@ pub fn parse_path(data : String) -> Array[PathCommand] {
             parser.parse_number(),
           ) {
           (Some(dx1), Some(dy1), Some(dx), Some(dy)) =>
-            commands.push(QuadraticCurveToRel(dx1, dy1, dx, dy))
+            commands.push(@text.QuadraticCurveToRel(dx1, dy1, dx, dy))
           _ => break
         }
       'T' =>
         match (parser.parse_number(), parser.parse_number()) {
-          (Some(x), Some(y)) => commands.push(SmoothQuadraticCurveTo(x, y))
+          (Some(x), Some(y)) =>
+            commands.push(@text.SmoothQuadraticCurveTo(x, y))
           _ => break
         }
       't' =>
         match (parser.parse_number(), parser.parse_number()) {
           (Some(dx), Some(dy)) =>
-            commands.push(SmoothQuadraticCurveToRel(dx, dy))
+            commands.push(@text.SmoothQuadraticCurveToRel(dx, dy))
           _ => break
         }
       'A' =>
@@ -319,7 +320,8 @@ pub fn parse_path(data : String) -> Array[PathCommand] {
             Some(sweep),
             Some(x),
             Some(y),
-          ) => commands.push(ArcTo(rx, ry, rotation, large_arc, sweep, x, y))
+          ) =>
+            commands.push(@text.ArcTo(rx, ry, rotation, large_arc, sweep, x, y))
           _ => break
         }
       'a' =>
@@ -342,10 +344,12 @@ pub fn parse_path(data : String) -> Array[PathCommand] {
             Some(dx),
             Some(dy),
           ) =>
-            commands.push(ArcToRel(rx, ry, rotation, large_arc, sweep, dx, dy))
+            commands.push(
+              @text.ArcToRel(rx, ry, rotation, large_arc, sweep, dx, dy),
+            )
           _ => break
         }
-      'Z' | 'z' => commands.push(ClosePath)
+      'Z' | 'z' => commands.push(@text.ClosePath)
       _ => break
     }
   }
@@ -471,7 +475,7 @@ fn PathContext::new() -> PathContext {
 /// Convert path commands to an array of polylines (for rendering)
 /// Returns array of point arrays, each representing a subpath
 pub fn path_to_polylines(
-  commands : Array[PathCommand],
+  commands : Array[@text.PathCommand],
   flatness : Double,
 ) -> Array[Array[(Double, Double)]] {
   let ctx = PathContext::new()
@@ -479,7 +483,7 @@ pub fn path_to_polylines(
   let mut current_path : Array[(Double, Double)] = []
   for cmd in commands {
     match cmd {
-      MoveTo(x, y) => {
+      @text.MoveTo(x, y) => {
         if current_path.length() > 0 {
           result.push(current_path)
         }
@@ -491,7 +495,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = false
       }
-      MoveToRel(dx, dy) => {
+      @text.MoveToRel(dx, dy) => {
         let x = ctx.x + dx
         let y = ctx.y + dy
         if current_path.length() > 0 {
@@ -505,14 +509,14 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = false
       }
-      LineTo(x, y) => {
+      @text.LineTo(x, y) => {
         current_path.push((x, y))
         ctx.x = x
         ctx.y = y
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = false
       }
-      LineToRel(dx, dy) => {
+      @text.LineToRel(dx, dy) => {
         let x = ctx.x + dx
         let y = ctx.y + dy
         current_path.push((x, y))
@@ -521,33 +525,33 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = false
       }
-      HorizontalLineTo(x) => {
+      @text.HorizontalLineTo(x) => {
         current_path.push((x, ctx.y))
         ctx.x = x
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = false
       }
-      HorizontalLineToRel(dx) => {
+      @text.HorizontalLineToRel(dx) => {
         let x = ctx.x + dx
         current_path.push((x, ctx.y))
         ctx.x = x
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = false
       }
-      VerticalLineTo(y) => {
+      @text.VerticalLineTo(y) => {
         current_path.push((ctx.x, y))
         ctx.y = y
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = false
       }
-      VerticalLineToRel(dy) => {
+      @text.VerticalLineToRel(dy) => {
         let y = ctx.y + dy
         current_path.push((ctx.x, y))
         ctx.y = y
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = false
       }
-      CurveTo(x1, y1, x2, y2, x, y) => {
+      @text.CurveTo(x1, y1, x2, y2, x, y) => {
         flatten_cubic(
           ctx.x,
           ctx.y,
@@ -567,7 +571,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = true
         ctx.last_cmd_was_quad = false
       }
-      CurveToRel(dx1, dy1, dx2, dy2, dx, dy) => {
+      @text.CurveToRel(dx1, dy1, dx2, dy2, dx, dy) => {
         let x1 = ctx.x + dx1
         let y1 = ctx.y + dy1
         let x2 = ctx.x + dx2
@@ -593,7 +597,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = true
         ctx.last_cmd_was_quad = false
       }
-      SmoothCurveTo(x2, y2, x, y) => {
+      @text.SmoothCurveTo(x2, y2, x, y) => {
         // Reflect previous control point
         let x1 = if ctx.last_cmd_was_curve {
           2.0 * ctx.x - ctx.last_ctrl_x
@@ -624,7 +628,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = true
         ctx.last_cmd_was_quad = false
       }
-      SmoothCurveToRel(dx2, dy2, dx, dy) => {
+      @text.SmoothCurveToRel(dx2, dy2, dx, dy) => {
         let x1 = if ctx.last_cmd_was_curve {
           2.0 * ctx.x - ctx.last_ctrl_x
         } else {
@@ -658,7 +662,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = true
         ctx.last_cmd_was_quad = false
       }
-      QuadraticCurveTo(x1, y1, x, y) => {
+      @text.QuadraticCurveTo(x1, y1, x, y) => {
         flatten_quadratic(ctx.x, ctx.y, x1, y1, x, y, flatness, current_path)
         ctx.last_ctrl_x = x1
         ctx.last_ctrl_y = y1
@@ -667,7 +671,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = true
       }
-      QuadraticCurveToRel(dx1, dy1, dx, dy) => {
+      @text.QuadraticCurveToRel(dx1, dy1, dx, dy) => {
         let x1 = ctx.x + dx1
         let y1 = ctx.y + dy1
         let x = ctx.x + dx
@@ -680,7 +684,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = true
       }
-      SmoothQuadraticCurveTo(x, y) => {
+      @text.SmoothQuadraticCurveTo(x, y) => {
         let x1 = if ctx.last_cmd_was_quad {
           2.0 * ctx.x - ctx.last_ctrl_x
         } else {
@@ -699,7 +703,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = true
       }
-      SmoothQuadraticCurveToRel(dx, dy) => {
+      @text.SmoothQuadraticCurveToRel(dx, dy) => {
         let x1 = if ctx.last_cmd_was_quad {
           2.0 * ctx.x - ctx.last_ctrl_x
         } else {
@@ -720,7 +724,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = true
       }
-      ArcTo(rx, ry, rotation, large_arc, sweep, x, y) => {
+      @text.ArcTo(rx, ry, rotation, large_arc, sweep, x, y) => {
         flatten_arc(
           ctx.x,
           ctx.y,
@@ -739,7 +743,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = false
       }
-      ArcToRel(rx, ry, rotation, large_arc, sweep, dx, dy) => {
+      @text.ArcToRel(rx, ry, rotation, large_arc, sweep, dx, dy) => {
         let x = ctx.x + dx
         let y = ctx.y + dy
         flatten_arc(
@@ -760,7 +764,7 @@ pub fn path_to_polylines(
         ctx.last_cmd_was_curve = false
         ctx.last_cmd_was_quad = false
       }
-      ClosePath => {
+      @text.ClosePath => {
         // Close back to start
         if current_path.length() > 0 {
           current_path.push((ctx.start_x, ctx.start_y))
@@ -1037,7 +1041,7 @@ fn flatten_arc(
   }
   // Generate points along the arc
   let n = max_int(((dtheta / flatness).abs() / 0.5).to_int(), 2)
-  for i in 1..=n {
+  for i in 1..<=n {
     let t = i.to_double() / n.to_double()
     let theta = theta1 + t * dtheta
     let cos_t = @math.cos(theta)
@@ -1089,7 +1093,7 @@ fn max_int(a : Int, b : Int) -> Int {
 ///|
 /// Rasterize path commands
 pub fn raster_path(
-  commands : Array[PathCommand],
+  commands : Array[@text.PathCommand],
   fill_color : Color?,
   stroke_color : Color?,
   flatness : Double,
@@ -1116,7 +1120,7 @@ pub fn raster_path(
 
 ///|
 /// Compute bounding box of path commands
-pub fn path_bbox(commands : Array[PathCommand]) -> BoundingBox {
+pub fn path_bbox(commands : Array[@text.PathCommand]) -> BoundingBox {
   let polylines = path_to_polylines(commands, 1.0)
   let mut bbox = BoundingBox::empty()
   for polyline in polylines {
