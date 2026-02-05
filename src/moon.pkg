@@ -1,7 +1,6 @@
 import {
   "moonbitlang/core/double",
   "moonbitlang/core/math",
-  "mizchi/text",
 }
 
 import "wbtest" {
