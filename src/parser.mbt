@@ -416,12 +416,10 @@ fn parse_element(
             node.viewport_height = v |> parse_length |> Some
           }
         }
-        match get_attr(attrs, "overflow") {
-          Some(v) =>
-            if trim_string(v) == "visible" {
-              node.clip_overflow = false
-            }
-          None => ()
+        if get_attr(attrs, "overflow") is Some(v) {
+          if trim_string(v) == "visible" {
+            node.clip_overflow = false
+          }
         }
         let x = match get_attr(attrs, "x") {
           Some(v) => parse_length(v)
@@ -969,17 +967,14 @@ fn extract_paint_order(attrs : Array[(String, String)]) -> PaintOrder? {
   if get_attr(attrs, "paint-order") is Some(v) {
     return v |> parse_paint_order |> Some
   }
-  match get_attr(attrs, "style") {
-    Some(style) => {
-      let pairs = parse_style_pairs(style)
-      for pair in pairs {
-        let name = pair.0.to_lower()
-        if name == "paint-order" {
-          return pair.1 |> parse_paint_order |> Some
-        }
+  if get_attr(attrs, "style") is Some(style) {
+    let pairs = parse_style_pairs(style)
+    for pair in pairs {
+      let name = pair.0.to_lower()
+      if name == "paint-order" {
+        return pair.1 |> parse_paint_order |> Some
       }
     }
-    None => ()
   }
   None
 }
@@ -1316,10 +1311,7 @@ fn parse_use(
           let translate = Transform::translate(use_elem.x, use_elem.y)
           let base = translate.multiply(use_elem.transform)
           node.transform = base.multiply(node.transform)
-          match get_attr(attrs, "id") {
-            Some(new_id) => node.id = new_id
-            None => node.id = ""
-          }
+          node.id = get_attr(attrs, "id").unwrap_or("")
           apply_presentation_attributes(node, attrs)
           if extract_paint_order(attrs) is Some(order) {
             apply_paint_order_recursive(node, order)
@@ -1331,35 +1323,29 @@ fn parse_use(
     _ =>
       match use_elem.instantiate(ctx.symbols) {
         Some(node) => {
-          match viewport_fallback {
-            Some((vw, vh)) => {
-              if node.viewport_width is None {
-                node.viewport_width = Some(vw)
-              }
-              if node.viewport_height is None {
-                node.viewport_height = Some(vh)
-              }
-              if node.view_box is None &&
-                node.viewport_width is Some(_) &&
-                node.viewport_height is Some(_) {
-                node.view_box = Some(ViewBox::{
-                  min_x: 0.0,
-                  min_y: 0.0,
-                  width: node.viewport_width.unwrap(),
-                  height: node.viewport_height.unwrap(),
-                })
-                node.preserve_aspect_ratio = PreserveAspectRatio::{
-                  align: None,
-                  meet_or_slice: Meet,
-                }
+          if viewport_fallback is Some((vw, vh)) {
+            if node.viewport_width is None {
+              node.viewport_width = Some(vw)
+            }
+            if node.viewport_height is None {
+              node.viewport_height = Some(vh)
+            }
+            if node.view_box is None &&
+              node.viewport_width is Some(_) &&
+              node.viewport_height is Some(_) {
+              node.view_box = Some(ViewBox::{
+                min_x: 0.0,
+                min_y: 0.0,
+                width: node.viewport_width.unwrap(),
+                height: node.viewport_height.unwrap(),
+              })
+              node.preserve_aspect_ratio = PreserveAspectRatio::{
+                align: None,
+                meet_or_slice: Meet,
               }
             }
-            None => ()
           }
-          match get_attr(attrs, "id") {
-            Some(id) => node.id = id
-            None => node.id = ""
-          }
+          node.id = get_attr(attrs, "id").unwrap_or("")
           apply_presentation_attributes(node, attrs)
           if extract_paint_order(attrs) is Some(order) {
             apply_paint_order_recursive(node, order)
@@ -1437,10 +1423,7 @@ fn parse_use(
               let translate = Transform::translate(use_elem.x, use_elem.y)
               let base = translate.multiply(use_elem.transform)
               node.transform = base.multiply(node.transform)
-              match get_attr(attrs, "id") {
-                Some(new_id) => node.id = new_id
-                None => node.id = ""
-              }
+              node.id = get_attr(attrs, "id").unwrap_or("")
               apply_presentation_attributes(node, attrs)
               if extract_paint_order(attrs) is Some(order) {
                 apply_paint_order_recursive(node, order)
@@ -2416,19 +2399,16 @@ fn parse_gradient_stop(attrs : Array[(String, String)]) -> GradientStop {
   if get_attr(attrs, "stop-opacity") is Some(v) {
     opacity = parse_number(v)
   }
-  match get_attr(attrs, "style") {
-    Some(style) => {
-      let pairs = parse_style_pairs(style)
-      for pair in pairs {
-        let key = pair.0.to_lower()
-        if key == "stop-color" {
-          color = parse_color(pair.1)
-        } else if key == "stop-opacity" {
-          opacity = parse_number(pair.1)
-        }
+  if get_attr(attrs, "style") is Some(style) {
+    let pairs = parse_style_pairs(style)
+    for pair in pairs {
+      let key = pair.0.to_lower()
+      if key == "stop-color" {
+        color = parse_color(pair.1)
+      } else if key == "stop-opacity" {
+        opacity = parse_number(pair.1)
       }
     }
-    None => ()
   }
   if opacity < 0.0 {
     opacity = 0.0
