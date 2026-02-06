@@ -4095,6 +4095,17 @@ pub fn RenderContext::with_clip(
 }
 
 ///|
+/// Create a RenderContext with font callback for text rendering
+pub fn RenderContext::with_font(
+  setter : PixelSetter,
+  width : Int,
+  height : Int,
+  text_to_paths : (Int, Double) -> (Array[PathCommand], Double),
+) -> RenderContext {
+  { setter, width, height, flatness: 0.5, clip: None, text_to_paths: Some(text_to_paths) }
+}
+
+///|
 /// Create a RenderContext for a camera
 pub fn RenderContext::for_camera(
   setter : PixelSetter,
