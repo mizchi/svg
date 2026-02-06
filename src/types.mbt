@@ -362,6 +362,30 @@ pub(all) enum SpreadMethod {
 } derive(Show, Eq)
 
 ///|
+/// Build a lookup table for fast gradient color sampling
+/// Returns an array of colors for t values from 0.0 to 1.0
+pub fn LinearGradient::build_lut(self : LinearGradient, size : Int) -> Array[Color] {
+  let lut = Array::make(size, Color::black())
+  for i in 0..<size {
+    let t = i.to_double() / (size - 1).to_double()
+    lut[i] = self.color_at(t)
+  }
+  lut
+}
+
+///|
+/// Get color from LUT (fast path)
+pub fn lut_color_at(lut : Array[Color], t : Double) -> Color {
+  let size = lut.length()
+  if size == 0 {
+    return Color::black()
+  }
+  let idx = (t * (size - 1).to_double()).to_int()
+  let idx = if idx < 0 { 0 } else if idx >= size { size - 1 } else { idx }
+  lut[idx]
+}
+
+///|
 /// Gradient units coordinate space
 pub(all) enum GradientUnits {
   UserSpaceOnUse
@@ -1781,6 +1805,17 @@ fn apply_spread(t : Double, spread : SpreadMethod) -> Double {
 }
 
 ///|
+/// Build a lookup table for fast radial gradient color sampling
+pub fn RadialGradient::build_lut(self : RadialGradient, size : Int) -> Array[Color] {
+  let lut = Array::make(size, Color::black())
+  for i in 0..<size {
+    let t = i.to_double() / (size - 1).to_double()
+    lut[i] = interpolate_gradient_color(t, self.stops)
+  }
+  lut
+}
+
+///|
 fn interpolate_gradient_color(t : Double, stops : Array[GradientStop]) -> Color {
   if stops.is_empty() {
     return Color::black()
@@ -3156,22 +3191,16 @@ pub(all) struct Image {
 ///|
 /// Create a new image with specified dimensions
 pub fn Image::new(width : Int, height : Int) -> Image {
-  let pixels : Array[Color] = []
   let total = width * height
-  for _ in 0..<total {
-    pixels.push(Color::transparent())
-  }
+  let pixels = Array::make(total, Color::transparent())
   { width, height, pixels }
 }
 
 ///|
 /// Create an image filled with a color
 pub fn Image::filled(width : Int, height : Int, color : Color) -> Image {
-  let pixels : Array[Color] = []
   let total = width * height
-  for _ in 0..<total {
-    pixels.push(color)
-  }
+  let pixels = Array::make(total, color)
   { width, height, pixels }
 }
 
@@ -3193,6 +3222,41 @@ pub fn Image::set_pixel(self : Image, x : Int, y : Int, color : Color) -> Unit {
 }
 
 ///|
+/// Set pixel without bounds checking (caller must ensure valid coordinates)
+pub fn Image::set_pixel_unchecked(
+  self : Image,
+  x : Int,
+  y : Int,
+  color : Color,
+) -> Unit {
+  self.pixels[y * self.width + x] = color
+}
+
+///|
+/// Fill a horizontal line (optimized for scanline rendering)
+/// x1 and x2 are inclusive, caller should ensure y is valid
+pub fn Image::fill_horizontal_line(
+  self : Image,
+  x1 : Int,
+  x2 : Int,
+  y : Int,
+  color : Color,
+) -> Unit {
+  if y < 0 || y >= self.height {
+    return
+  }
+  let start_x = if x1 < 0 { 0 } else { x1 }
+  let end_x = if x2 >= self.width { self.width - 1 } else { x2 }
+  if start_x > end_x {
+    return
+  }
+  let base = y * self.width
+  for x in start_x..<(end_x + 1) {
+    self.pixels[base + x] = color
+  }
+}
+
+///|
 /// Fill a rectangle region
 pub fn Image::fill_rect(
   self : Image,
@@ -3202,10 +3266,12 @@ pub fn Image::fill_rect(
   h : Int,
   color : Color,
 ) -> Unit {
+  if w <= 0 || h <= 0 {
+    return
+  }
+  let x2 = x + w - 1
   for py in y..<(y + h) {
-    for px in x..<(x + w) {
-      self.set_pixel(px, py, color)
-    }
+    self.fill_horizontal_line(x, x2, py, color)
   }
 }
 

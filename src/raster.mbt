@@ -425,6 +425,8 @@ pub fn raster_rect_gradient(
   if w <= 0 || h <= 0 {
     return
   }
+  // Build LUT for fast color lookup (256 entries)
+  let lut = grad.build_lut(256)
   // Gradient direction vector (in normalized 0-1 space)
   let gx1 = grad.x1
   let gy1 = grad.y1
@@ -433,27 +435,19 @@ pub fn raster_rect_gradient(
   let gdx = gx2 - gx1
   let gdy = gy2 - gy1
   let glen_sq = gdx * gdx + gdy * gdy
+  let inv_w = if w > 1 { 1.0 / (w - 1).to_double() } else { 0.0 }
+  let inv_h = if h > 1 { 1.0 / (h - 1).to_double() } else { 0.0 }
+  let inv_glen_sq = if glen_sq > 0.0001 { 1.0 / glen_sq } else { 0.0 }
   for py in y..<(y + h) {
+    let ny = if h > 1 { (py - y).to_double() * inv_h } else { 0.5 }
+    let base_y = (ny - gy1) * gdy
     for px in x..<(x + w) {
       // Normalize pixel position to 0-1 within rect
-      let nx = if w > 1 {
-        (px - x).to_double() / (w - 1).to_double()
-      } else {
-        0.5
-      }
-      let ny = if h > 1 {
-        (py - y).to_double() / (h - 1).to_double()
-      } else {
-        0.5
-      }
+      let nx = if w > 1 { (px - x).to_double() * inv_w } else { 0.5 }
       // Project onto gradient line
-      let t = if glen_sq > 0.0001 {
-        ((nx - gx1) * gdx + (ny - gy1) * gdy) / glen_sq
-      } else {
-        0.0
-      }
-      // Get color at this position
-      let color = grad.color_at(t)
+      let t = ((nx - gx1) * gdx + base_y) * inv_glen_sq
+      // Get color from LUT
+      let color = lut_color_at(lut, t)
       let final_color = if opacity < 1.0 {
         Color::rgba(
           color.r,
@@ -483,21 +477,30 @@ pub fn raster_rect_radial_gradient(
   if w <= 0 || h <= 0 {
     return
   }
+  // Build LUT for fast color lookup
+  let lut = grad.build_lut(256)
+  // Precompute gradient parameters
+  let gx = grad.cx
+  let gy = grad.cy
+  let gr = grad.r
+  let inv_gr = if gr > 0.0 { 1.0 / gr } else { 0.0 }
+  let inv_w = if w > 1 { 1.0 / (w - 1).to_double() } else { 0.0 }
+  let inv_h = if h > 1 { 1.0 / (h - 1).to_double() } else { 0.0 }
   for py in y..<(y + h) {
+    let ny = if h > 1 { (py - y).to_double() * inv_h } else { 0.5 }
+    let dy = ny - gy
+    let dy_sq = dy * dy
     for px in x..<(x + w) {
       // Normalize pixel position to 0-1 within rect
-      let nx = if w > 1 {
-        (px - x).to_double() / (w - 1).to_double()
-      } else {
-        0.5
-      }
-      let ny = if h > 1 {
-        (py - y).to_double() / (h - 1).to_double()
-      } else {
-        0.5
-      }
-      // Get color using radial gradient
-      let color = grad.color_at(nx, ny, 1.0, 1.0)
+      let nx = if w > 1 { (px - x).to_double() * inv_w } else { 0.5 }
+      // Distance from center
+      let dx = nx - gx
+      let dist = (dx * dx + dy_sq).sqrt()
+      // Normalized position
+      let t = dist * inv_gr
+      let t = apply_spread_inline(t, grad.spread_method)
+      // Get color from LUT
+      let color = lut_color_at(lut, t)
       let final_color = if opacity < 1.0 {
         Color::rgba(
           color.r,
@@ -509,6 +512,18 @@ pub fn raster_rect_radial_gradient(
         color
       }
       setter.pixel(px, py, final_color)
+    }
+  }
+}
+
+///|
+fn apply_spread_inline(t : Double, spread : SpreadMethod) -> Double {
+  match spread {
+    Pad => if t < 0.0 { 0.0 } else if t > 1.0 { 1.0 } else { t }
+    Repeat => t - t.floor()
+    Reflect => {
+      let t2 = t - t.floor()
+      if t.to_int() % 2 == 0 { t2 } else { 1.0 - t2 }
     }
   }
 }
@@ -526,17 +541,31 @@ pub fn raster_circle_radial_gradient(
   if r <= 0 {
     return
   }
+  // Build LUT for fast color lookup
+  let lut = grad.build_lut(256)
   let r_sq = r * r
+  let r_f = r.to_double()
+  let inv_2r = 0.5 / r_f
+  // Precompute gradient center offset from circle center
+  let gx = grad.cx - 0.5
+  let gy = grad.cy - 0.5
+  let gr = grad.r
+  let inv_gr = if gr > 0.0 { 1.0 / gr } else { 0.0 }
   for py in (cy - r)..<=(cy + r) {
+    let dy = py - cy
+    let dy_sq = dy * dy
+    let ny_offset = dy.to_double() * inv_2r - gy
     for px in (cx - r)..<=(cx + r) {
       let dx = px - cx
-      let dy = py - cy
-      let dist_sq = dx * dx + dy * dy
+      let dist_sq = dx * dx + dy_sq
       if dist_sq <= r_sq {
-        // Normalize position: center is (0.5, 0.5), edges at distance r
-        let nx = 0.5 + dx.to_double() / (2.0 * r.to_double())
-        let ny = 0.5 + dy.to_double() / (2.0 * r.to_double())
-        let color = grad.color_at(nx, ny, 1.0, 1.0)
+        // Calculate t for radial gradient
+        let nx_offset = dx.to_double() * inv_2r - gx
+        let grad_dist = (nx_offset * nx_offset + ny_offset * ny_offset).sqrt()
+        let t = grad_dist * inv_gr
+        let t = apply_spread_inline(t, grad.spread_method)
+        // Get color from LUT
+        let color = lut_color_at(lut, t)
         let final_color = if opacity < 1.0 {
           Color::rgba(
             color.r,
@@ -567,16 +596,32 @@ pub fn raster_ellipse_radial_gradient(
   if rx <= 0 || ry <= 0 {
     return
   }
+  // Build LUT for fast color lookup
+  let lut = grad.build_lut(256)
+  let inv_rx = 1.0 / rx.to_double()
+  let inv_ry = 1.0 / ry.to_double()
+  let inv_2rx = 0.5 * inv_rx
+  let inv_2ry = 0.5 * inv_ry
+  // Precompute gradient center offset
+  let gx = grad.cx - 0.5
+  let gy = grad.cy - 0.5
+  let gr = grad.r
+  let inv_gr = if gr > 0.0 { 1.0 / gr } else { 0.0 }
   for py in (cy - ry)..<=(cy + ry) {
+    let dy_norm = (py - cy).to_double() * inv_ry
+    let dy_sq = dy_norm * dy_norm
+    let ny_offset = (py - cy).to_double() * inv_2ry - gy
     for px in (cx - rx)..<=(cx + rx) {
-      let dx = (px - cx).to_double() / rx.to_double()
-      let dy = (py - cy).to_double() / ry.to_double()
-      let dist_sq = dx * dx + dy * dy
+      let dx_norm = (px - cx).to_double() * inv_rx
+      let dist_sq = dx_norm * dx_norm + dy_sq
       if dist_sq <= 1.0 {
-        // Normalize position to 0-1 range
-        let nx = 0.5 + (px - cx).to_double() / (2.0 * rx.to_double())
-        let ny = 0.5 + (py - cy).to_double() / (2.0 * ry.to_double())
-        let color = grad.color_at(nx, ny, 1.0, 1.0)
+        // Calculate t for radial gradient
+        let nx_offset = (px - cx).to_double() * inv_2rx - gx
+        let grad_dist = (nx_offset * nx_offset + ny_offset * ny_offset).sqrt()
+        let t = grad_dist * inv_gr
+        let t = apply_spread_inline(t, grad.spread_method)
+        // Get color from LUT
+        let color = lut_color_at(lut, t)
         let final_color = if opacity < 1.0 {
           Color::rgba(
             color.r,
