@@ -31,21 +31,15 @@ const skipPatterns = skipArg
       .map((s) => s.trim())
       .filter((s) => s.length > 0)
   : [
-      'paint-context',
       'viewref',
       'use-same-origin',
       'nested-svg-through-display-contents',
-      'pattern-text',
       'nested-svg-sizing',
       'marker-003',
       'marker-005',
       'marker-008',
-      'markers-orient-002',
-      'marker-external-reference',
-      'marker-path-001',
-      'marker-path-011',
-      'marker-units',
-      'paint-order-002',
+      'marker-units-strokewidth-non-scaling-stroke',
+      'marker-units-userspaceonuse-non-scaling-stroke',
     ];
 
 if (!fs.existsSync(svgRoot)) {
