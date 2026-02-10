@@ -1,5 +1,5 @@
 import {
-  "mizchi/svg" as @svg,
+  "mizchi/svg" @svg,
 }
 
 options(
