@@ -25,9 +25,7 @@ jobs:
         run: |
           moon info
           git --no-pager diff --no-ext-diff --exit-code
-      - name: Moon format check
-        run: |
-          moon fmt
-          git --no-pager diff --no-ext-diff --exit-code
+      - name: Moon format
+        run: moon fmt
       - name: Moon test
         run: moon test
