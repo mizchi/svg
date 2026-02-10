@@ -145,7 +145,6 @@ fn SVGParser::skip_whitespace(self : SVGParser) -> Unit {
     let c = self.peek()
     if c == ' ' || c == '\t' || c == '\n' || c == '\r' {
       let _ = self.advance()
-
     } else {
       break
     }
@@ -261,7 +260,6 @@ fn parse_element(
       break
     } else {
       let _ = parser.advance()
-
     }
   }
   if parser.is_end() {
@@ -284,7 +282,6 @@ fn parse_element(
   } else {
     // Expect closing '>'
     let _ = parser.expect_char('>')
-
   }
   match tag_name {
     "defs" => {
@@ -454,7 +451,6 @@ fn parse_element(
       }
       if pushed {
         let _ = ctx.viewport_stack.pop()
-
       }
       Some(node)
     }
@@ -486,7 +482,6 @@ fn skip_to_end_tag(parser : SVGParser, _tag_name : String) -> Unit {
       }
     } else {
       let _ = parser.advance()
-
     }
   }
 }
@@ -507,7 +502,6 @@ fn parse_children(
       // Skip text content
       while not(parser.is_end()) && parser.peek() != '<' {
         let _ = parser.advance()
-
       }
       continue
     }
@@ -549,7 +543,6 @@ fn parse_children(
     }
   }
   let _ = ctx.style_stack.pop()
-
 }
 
 ///|
@@ -2337,7 +2330,6 @@ fn parse_gradient_stops(
       // Skip text content
       while not(parser.is_end()) && parser.peek() != '<' {
         let _ = parser.advance()
-
       }
       continue
     }
@@ -2373,7 +2365,6 @@ fn parse_gradient_stops(
       self_closing = true
     } else {
       let _ = parser.expect_char('>')
-
     }
     if tag_name == "stop" {
       stops.push(parse_gradient_stop(attrs))

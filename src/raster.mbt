@@ -523,7 +523,11 @@ fn apply_spread_inline(t : Double, spread : SpreadMethod) -> Double {
     Repeat => t - t.floor()
     Reflect => {
       let t2 = t - t.floor()
-      if t.to_int() % 2 == 0 { t2 } else { 1.0 - t2 }
+      if t.to_int() % 2 == 0 {
+        t2
+      } else {
+        1.0 - t2
+      }
     }
   }
 }
@@ -812,10 +816,10 @@ pub fn raster_circle_fill(
   while x >= y {
     // Draw horizontal lines for each y level
     for px in (cx - x)..<=(cx + x) {
-      setter..pixel(px, cy + y, color)..pixel(px, cy - y, color)
+      setter..pixel(px, cy + y, color)..pixel(px, cy - y, color) |> ignore
     }
     for px in (cx - y)..<=(cx + y) {
-      setter..pixel(px, cy + x, color)..pixel(px, cy - x, color)
+      setter..pixel(px, cy + x, color)..pixel(px, cy - x, color) |> ignore
     }
     y = y + 1
     if err < 0 {

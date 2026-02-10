@@ -102,7 +102,6 @@ pub fn AnimationManager::cleanup(self : AnimationManager) -> Unit {
   while i >= 0 {
     if self.tweens[i].is_complete() {
       let _ = self.tweens.remove(i)
-
     }
     i = i - 1
   }
@@ -4102,7 +4101,14 @@ pub fn RenderContext::with_font(
   height : Int,
   text_to_paths : (Int, Double) -> (Array[PathCommand], Double),
 ) -> RenderContext {
-  { setter, width, height, flatness: 0.5, clip: None, text_to_paths: Some(text_to_paths) }
+  {
+    setter,
+    width,
+    height,
+    flatness: 0.5,
+    clip: None,
+    text_to_paths: Some(text_to_paths),
+  }
 }
 
 ///|

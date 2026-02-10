@@ -364,7 +364,10 @@ pub(all) enum SpreadMethod {
 ///|
 /// Build a lookup table for fast gradient color sampling
 /// Returns an array of colors for t values from 0.0 to 1.0
-pub fn LinearGradient::build_lut(self : LinearGradient, size : Int) -> Array[Color] {
+pub fn LinearGradient::build_lut(
+  self : LinearGradient,
+  size : Int,
+) -> Array[Color] {
   let lut = Array::make(size, Color::black())
   for i in 0..<size {
     let t = i.to_double() / (size - 1).to_double()
@@ -1377,7 +1380,6 @@ pub fn EventManager::on(
 /// Remove all listeners for a node
 pub fn EventManager::off_all(self : EventManager, node_id : String) -> Unit {
   let _ = self.listeners.remove(node_id)
-
 }
 
 ///|
@@ -1806,7 +1808,10 @@ fn apply_spread(t : Double, spread : SpreadMethod) -> Double {
 
 ///|
 /// Build a lookup table for fast radial gradient color sampling
-pub fn RadialGradient::build_lut(self : RadialGradient, size : Int) -> Array[Color] {
+pub fn RadialGradient::build_lut(
+  self : RadialGradient,
+  size : Int,
+) -> Array[Color] {
   let lut = Array::make(size, Color::black())
   for i in 0..<size {
     let t = i.to_double() / (size - 1).to_double()
