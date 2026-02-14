@@ -4,3 +4,6 @@
 /wpt/
 /scripts/
 target
+component/_build/
+component/*.wasm
+component/test/gen/
