@@ -66,6 +66,8 @@ pub fn line(String, Double, Double, Double, Double) -> SVGNode
 
 pub fn luminance_to_alpha_matrix() -> FixedArray[Double]
 
+pub fn lut_color_at(Array[Color], Double) -> Color
+
 pub fn parse_path(String) -> Array[PathCommand]
 
 pub fn parse_svg(String) -> SVGNode?
@@ -475,6 +477,7 @@ pub fn Image::apply_saturate_in_place(Self, Double) -> Unit
 pub fn Image::apply_sepia_in_place(Self, Double) -> Unit
 pub fn Image::clear(Self) -> Unit
 pub fn Image::clone(Self) -> Self
+pub fn Image::fill_horizontal_line(Self, Int, Int, Int, Color) -> Unit
 pub fn Image::fill_rect(Self, Int, Int, Int, Int, Color) -> Unit
 pub fn Image::filled(Int, Int, Color) -> Self
 pub fn Image::flip_horizontal(Self) -> Self
@@ -484,6 +487,7 @@ pub fn Image::new(Int, Int) -> Self
 pub fn Image::rotate_90_ccw(Self) -> Self
 pub fn Image::rotate_90_cw(Self) -> Self
 pub fn Image::set_pixel(Self, Int, Int, Color) -> Unit
+pub fn Image::set_pixel_unchecked(Self, Int, Int, Color) -> Unit
 pub fn Image::sub_image(Self, Int, Int, Int, Int) -> Self
 
 pub(all) enum Isolation {
@@ -519,6 +523,7 @@ pub(all) struct LinearGradient {
   units : GradientUnits
   transform : Transform
 }
+pub fn LinearGradient::build_lut(Self, Int) -> Array[Color]
 pub fn LinearGradient::color_at(Self, Double) -> Color
 pub fn LinearGradient::horizontal(Color, Color) -> Self
 pub fn LinearGradient::new(Double, Double, Double, Double, Array[GradientStop]) -> Self
@@ -777,6 +782,7 @@ pub(all) struct RadialGradient {
   units : GradientUnits
   transform : Transform
 }
+pub fn RadialGradient::build_lut(Self, Int) -> Array[Color]
 pub fn RadialGradient::color_at(Self, Double, Double, Double, Double) -> Color
 pub fn RadialGradient::new(Double, Double, Double, Array[GradientStop]) -> Self
 
@@ -791,6 +797,7 @@ pub(all) struct RenderContext {
 pub fn RenderContext::for_camera(PixelSetter, Camera) -> Self
 pub fn RenderContext::new(PixelSetter, Int, Int) -> Self
 pub fn RenderContext::with_clip(PixelSetter, Int, Int, ClipRect) -> Self
+pub fn RenderContext::with_font(PixelSetter, Int, Int, (Int, Double) -> (Array[PathCommand], Double)) -> Self
 
 pub(all) struct SVGDocument {
   root : SVGNode
