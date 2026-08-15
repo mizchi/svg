@@ -8,7 +8,7 @@ extern "wasm" fn mem_load8(ptr : Int) -> Int =
 ///|
 /// Store byte to linear memory (i32.store8)
 extern "wasm" fn mem_store8(ptr : Int, val : Int) -> Unit =
-  #|(func (param i32 i32) (result i32) (i32.store8 (local.get 0) (local.get 1)) (i32.const 0))
+  #|(func (param i32 i32) (i32.store8 (local.get 0) (local.get 1)))
 
 ///|
 /// Load i32 from linear memory (i32.load)
@@ -18,7 +18,7 @@ extern "wasm" fn mem_load32(ptr : Int) -> Int =
 ///|
 /// Store i32 to linear memory (i32.store)
 extern "wasm" fn mem_store32(ptr : Int, val : Int) -> Unit =
-  #|(func (param i32 i32) (result i32) (i32.store (local.get 0) (local.get 1)) (i32.const 0))
+  #|(func (param i32 i32) (i32.store (local.get 0) (local.get 1)))
 
 ///|
 /// Load i64 from linear memory (i64.load)
@@ -28,7 +28,7 @@ extern "wasm" fn mem_load64(ptr : Int) -> Int64 =
 ///|
 /// Store i64 to linear memory (i64.store)
 extern "wasm" fn mem_store64(ptr : Int, val : Int64) -> Unit =
-  #|(func (param i32 i64) (result i32) (i64.store (local.get 0) (local.get 1)) (i32.const 0))
+  #|(func (param i32 i64) (i64.store (local.get 0) (local.get 1)))
 
 ///|
 /// Load f32 from linear memory (f32.load)
