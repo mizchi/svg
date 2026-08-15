@@ -1,10 +1,11 @@
 import {
-  "svg-component/gen/cabi" @cabi,
-  "mizchi/svg" @svg,
+  "svg-component/gen/cabi",
+  "mizchi/svg",
 }
 
+pkgtype(kind: "executable")
+
 options(
-  "is-main": true,
   link: {
     "wasm": {
       "export-memory-name": "memory",

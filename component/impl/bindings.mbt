@@ -6,18 +6,7 @@ pub(all) struct Image {
   width : UInt
   height : UInt
   data : Array[Byte]
-} derive(Eq)
-
-///|
-pub impl Show for Image with output(self, logger) {
-  logger.write_string("{width: ")
-  self.width.output(logger)
-  logger.write_string(", height: ")
-  self.height.output(logger)
-  logger.write_string(", data: ")
-  self.data.output(logger)
-  logger.write_string("}")
-}
+} derive(Debug, Eq)
 
 ///|
 /// Re-export cabi_realloc for wasm linking

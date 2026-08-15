@@ -1,6 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "svg-component/impl"
 
+import {
+  "moonbitlang/core/debug",
+}
+
 // Values
 pub fn cabi_realloc(Int, Int, Int, Int) -> Int
 
@@ -13,10 +17,8 @@ pub(all) struct Image {
   width : UInt
   height : UInt
   data : Array[Byte]
-} derive(Eq)
-pub impl Show for Image
+} derive(Eq, @debug.Debug)
 
 // Type aliases
 
 // Traits
-
