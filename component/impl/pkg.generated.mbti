@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "svg-component/impl"
+
+// Values
+pub fn cabi_realloc(Int, Int, Int, Int) -> Int
+
+pub fn wasmExportRender(Int, Int, Int, Int) -> Int
+
+// Errors
+
+// Types and methods
+pub(all) struct Image {
+  width : UInt
+  height : UInt
+  data : Array[Byte]
+} derive(Eq)
+pub impl Show for Image
+
+// Type aliases
+
+// Traits
+
