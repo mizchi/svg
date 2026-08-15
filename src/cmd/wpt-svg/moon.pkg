@@ -1,7 +1,5 @@
 import {
-  "mizchi/svg" @svg,
+  "mizchi/svg",
 }
 
-options(
-  is_main: true,
-)
+pkgtype(kind: "executable")

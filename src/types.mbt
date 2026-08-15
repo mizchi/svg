@@ -5271,66 +5271,66 @@ pub fn MarkedLine::get_angle_at(self : MarkedLine, index : Int) -> Double {
 }
 
 ///|
-pub impl Show for Align with output(self, logger) {
+pub impl Show for Align with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for MeetOrSlice with output(self, logger) {
+pub impl Show for MeetOrSlice with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for LineCap with output(self, logger) {
+pub impl Show for LineCap with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for LineJoin with output(self, logger) {
+pub impl Show for LineJoin with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for FillRule with output(self, logger) {
+pub impl Show for FillRule with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for MaskType with output(self, logger) {
+pub impl Show for MaskType with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for WritingMode with output(self, logger) {
+pub impl Show for WritingMode with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for TextOrientation with output(self, logger) {
+pub impl Show for TextOrientation with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for WhiteSpace with output(self, logger) {
+pub impl Show for WhiteSpace with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for TextOverflow with output(self, logger) {
+pub impl Show for TextOverflow with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for TextDecorationStyle with output(self, logger) {
+pub impl Show for TextDecorationStyle with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for PaintOrderItem with output(self, logger) {
+pub impl Show for PaintOrderItem with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }
 
 ///|
-pub impl Show for TextDecoration with output(self, logger) {
+pub impl Show for TextDecoration with fn output(self, logger) {
   logger.write_string(@debug.to_string(self))
 }

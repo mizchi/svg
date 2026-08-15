@@ -1,0 +1,25 @@
+import {
+  "svg-component/gen/cabi",
+  "mizchi/svg",
+}
+
+pkgtype(kind: "executable")
+
+options(
+  link: {
+    "wasm": {
+      "export-memory-name": "memory",
+      "exports": [
+        "cabi_realloc:cabi_realloc",
+        "wasmExportRender:mizchi:svg/svg@0.1.0#render",
+      ],
+    },
+    "wasm-gc": {
+      "export-memory-name": "memory",
+      "exports": [
+        "cabi_realloc:cabi_realloc",
+        "wasmExportRender:mizchi:svg/svg@0.1.0#render",
+      ],
+    },
+  },
+)

@@ -1,5 +1,5 @@
 moon_component := env("MOON_COMPONENT", "moon-component")
-wasm := "_build/wasm/release/build/impl/impl.wasm"
+wasm := "_build/wasm/release/build/svg-component/impl/impl.wasm"
 out := "svg-component.wasm"
 
 default:

@@ -6,9 +6,10 @@ pub(all) struct Image {
   width : UInt
   height : UInt
   data : Array[Byte]
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
-///| Re-export cabi_realloc for wasm linking
+///|
+/// Re-export cabi_realloc for wasm linking
 pub fn cabi_realloc(
   old_ptr : Int,
   old_size : Int,
@@ -18,9 +19,19 @@ pub fn cabi_realloc(
   @cabi.cabi_realloc(old_ptr, old_size, align, new_size)
 }
 
-pub fn wasmExportRender(svg_markup_ptr : Int, svg_markup_len : Int, width : Int, height : Int) -> Int {
+///|
+pub fn wasmExportRender(
+  svg_markup_ptr : Int,
+  svg_markup_len : Int,
+  width : Int,
+  height : Int,
+) -> Int {
   let svg_markup = @cabi.cabi_lift_string(svg_markup_ptr, svg_markup_len)
-  let result = render(svg_markup, width.reinterpret_as_uint(), height.reinterpret_as_uint())
+  let result = render(
+    svg_markup,
+    width.reinterpret_as_uint(),
+    height.reinterpret_as_uint(),
+  )
   let retptr = @cabi.cabi_realloc(0, 0, 4, 20)
   match result {
     Some(val) => {
@@ -32,7 +43,7 @@ pub fn wasmExportRender(svg_markup_ptr : Int, svg_markup_len : Int, width : Int,
       let ptr = @cabi.cabi_realloc(0, 0, 1, len * elem_size)
       for i, elem in val.data {
         let elem_ptr = ptr + i * elem_size
-    @cabi.cabi_write_u8(elem_ptr, elem)
+        @cabi.cabi_write_u8(elem_ptr, elem)
       }
       @cabi.cabi_write_i32(retptr + 4 + 8, ptr)
       @cabi.cabi_write_i32(retptr + 4 + 8 + 4, len)
